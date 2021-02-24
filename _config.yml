@@ -3,12 +3,12 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
-keywords:
-author: John Doe
-language: en
+title: Leason
+subtitle: Leason`s Web
+description: 'Leason`s Web'
+keywords: ops
+author: leason
+language: zh-Hans
 timezone: ''
 
 # URL
@@ -107,3 +107,10 @@ deploy:
   repo: https://github.com/leason00/leason00.github.io
   # example, https://github.com/hexojs/hexojs.github.io
   branch: gh-pages
+
+# 搜索
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
