@@ -4,16 +4,16 @@
 
 # Site
 title: Leason
-subtitle: Leason`s Web
-description: 'Leason`s Web'
-keywords: ops
+subtitle: Leason`s Blog
+description: 'Leason`s Blog'
+keywords: coder
 author: leason
 language: zh-CN
 timezone: ''
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://example.com/child' and root as '/child/'
-url: http://example.com
+url: http://leason.top
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
