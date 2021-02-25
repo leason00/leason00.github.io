@@ -1,40 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Test</title>
-    <url>/2021/02/24/Test/</url>
-    <content><![CDATA[<a id="more"></a>]]></content>
-      <categories>
-        <category>test</category>
-      </categories>
+    <title>StackStorm(事件驱动的自动化引擎)</title>
+    <url>/2021/02/25/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/</url>
+    <content><![CDATA[<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>StackStorm是一个功能强大的开源自动化平台，可将所有应用程序，服务和工作流程连接起来。 它具有可扩展性，灵活性, 设计中包含了对DevOps和ChatOps的热爱。它可以将您现有的基础架构和应用程序环境联系在一起，以便您可以更轻松地自动化操作该环境。它特别专注于针对事件采取行动。</p>
+<ul>
+<li><p>便利的故障排除 - 触发由监控系统捕获的系统故障，在物理节点、OpenStack或Amazon实例和应用程序组件上运行一系列诊断检查，并将结果发布到共享通信环境中，如HipChat或JIRA。</p>
+</li>
+<li><p>自动修复 - 识别和验证OpenStack计算节点上的硬件故障，正确隔离实例并向管理员发送关于潜在停机时间的电子邮件，但如果出现任何问题 - 暂停工作流程并呼叫人员。</p>
+</li>
+<li><p>持续部署 - 与Jenkins一起构建和测试，配置新的AWS群集，基于NewRelic的应用程序性能数据，打开负载均衡器的一些流量，以及前滚或回滚</p>
+</li>
+</ul>
+<a id="more"></a>
+
+<p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p34" alt="649e1caba0f4cbb43c121b074316e9db.jpeg"></p>
+<h4 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h4><ul>
+<li>Sensors是用于分别接收或监视事件的入站或出站集成的Python插件。 当来自外部系统的事件发生并由传感器处理时，StackStorm触发器将发射到系统中。</li>
+<li>Triggers是外部事件的StackStorm表示形式。 有通用触发器（例如定时器，webhooks）和集成触发器（例如，Sensu告警，JIRA问题更新）。 通过编写传感器插件可以定义新的触发器类型。</li>
+<li>Actions是StackStorm出站集成。 有通用动作（ssh，REST调用），集成（OpenStack，Docker，Puppet）或自定义操作。 动作是Python插件或任何脚本，通过添加几行元数据将其消耗到StackStorm中。 动作可以由用户通过CLI或API直接调用，或者作为规则和工作流程的一部分使用和调用。</li>
+<li>Rules将触发器映射到动作（或工作流），应用匹配条件并将触发器加载到动作输入中。</li>
+<li>Workflows将动作拼接成“超级Actions”，定义顺序，转换条件以及传递数据。 大多数自动化不止一步，因此需要多个动     作。 工作流就像“原子”动作一样，可在Action库中使用，并且可以手动调用或由规则触发。</li>
+<li>Packs是内容部署的单位。 它们通过对集成（触发器和动作）和自动化（规则和工作流）进行分组，简化了StackStorm可插拔内容的管理和共享。 StackStorm Exchange上有越来越多的包可用。 用户可以创建自己的包，在Github上共享它们，或者提交给StackStorm Exchange.</li>
+</ul>
+<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p35" alt="bf6047ae0c9f762d5e48233f46d44c65.png"></p>
+<ol>
+<li>从各个服务系统通过push或pull的方式把event传给sensors</li>
+<li>sensors会产生一个trigger到规则配置中查询该trigger对应的动作或者工作流</li>
+<li>将来自工作流的Action发送到消息队列（内置rabbitmq）中Actions到达外部的系统后就执行相应的动作</li>
+<li>日志和审计历史被推送到数据库进行存储（Mongodb）</li>
+</ol>
+<h3 id="Sensors"><a href="#Sensors" class="headerlink" title="Sensors"></a>Sensors</h3><p>传感器是将外部系统和事件与StackStorm集成的一种方式。传感器是一段Python代码，它们要么定期轮询某些外部系统，要么被动地等待入站事件。</p>
+<p>SampleSensor Yaml:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class_name: &quot;SampleSensor&quot;</span><br><span class="line">entry_point: &quot;sample_sensor.py&quot;</span><br><span class="line">description: &quot;Sample sensor that emits triggers.&quot;</span><br><span class="line">trigger_types:</span><br><span class="line">  -</span><br><span class="line">    name: &quot;event&quot;</span><br><span class="line">    description: &quot;An example trigger.&quot;</span><br><span class="line">    payload_schema:</span><br><span class="line">      type: &quot;object&quot;</span><br><span class="line">      properties:</span><br><span class="line">        executed_at:</span><br><span class="line">          type: &quot;string&quot;</span><br><span class="line">          format: &quot;date-time&quot;</span><br><span class="line">          default: &quot;2014-07-30 05:04:24.578325&quot;</span><br></pre></td></tr></table></figure>
+
+<p>SampleSensor Python:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">from st2reactor.sensor.base import Sensor</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class SampleSensor(Sensor):</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    * self.sensor_service</span><br><span class="line">        - provides utilities like</span><br><span class="line">            - get_logger() - returns logger instance specific to this sensor.</span><br><span class="line">            - dispatch() for dispatching triggers into the system.</span><br><span class="line">    * self._config</span><br><span class="line">        - contains parsed configuration that was specified as</span><br><span class="line">          config.yaml in the pack.</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    def setup(self):</span><br><span class="line">        # Setup stuff goes here. For example, you might establish connections</span><br><span class="line">        # to external system once and reuse it. This is called only once by the system.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def run(self):</span><br><span class="line">        # This is where the crux of the sensor work goes.</span><br><span class="line">        # This is called once by the system.</span><br><span class="line">        # (If you want to sleep for regular intervals and keep</span><br><span class="line">        # interacting with your external system, you&#39;d inherit from PollingSensor.)</span><br><span class="line">        # For example, let&#39;s consider a simple flask app. You&#39;d run the flask app here.</span><br><span class="line">        # You can dispatch triggers using sensor_service like so:</span><br><span class="line">        # self.sensor_service(trigger, payload, trace_tag)</span><br><span class="line">        #   # You can refer to the trigger as dict</span><br><span class="line">        #   # &#123; &quot;name&quot;: $&#123;trigger_name&#125;, &quot;pack&quot;: $&#123;trigger_pack&#125; &#125;</span><br><span class="line">        #   # or just simply by reference as string.</span><br><span class="line">        #   # i.e. dispatch($&#123;trigger_pack&#125;.$&#123;trigger_name&#125;, payload)</span><br><span class="line">        #   # E.g.: dispatch(&#39;examples.foo_sensor&#39;, &#123;&#39;k1&#39;: &#39;stuff&#39;, &#39;k2&#39;: &#39;foo&#39;&#125;)</span><br><span class="line">        #   # trace_tag is a tag you would like to associate with the dispatched TriggerInstance</span><br><span class="line">        #   # Typically the trace_tag is unique and a reference to an external event.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def cleanup(self):</span><br><span class="line">        # This is called when the st2 system goes down. You can perform cleanup operations like</span><br><span class="line">        # closing the connections to external system here.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def add_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is created</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def update_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is updated</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def remove_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is deleted</span><br><span class="line">        pass</span><br></pre></td></tr></table></figure>
+
+<h3 id="Triggers"><a href="#Triggers" class="headerlink" title="Triggers"></a>Triggers</h3><p>用于标识传入StackStorm的事件<br>Internal Triggers：</p>
+<ol>
+<li>st2.generic.actiontrigger</li>
+<li>st2.generic.notifytrigger</li>
+<li>st2.action.file_writen</li>
+<li>st2.generic.inquiry</li>
+</ol>
+<h3 id="Rules"><a href="#Rules" class="headerlink" title="Rules"></a>Rules</h3><p>StackStorm使用Rules和Workflow操作模式捕获为自动化。规则将触发器映射到操作（或工作流），应用匹配条件，并将触发器有效负载映射到Actions输入</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">name: &quot;rule_name&quot;                      # required</span><br><span class="line">pack: &quot;examples&quot;                       # optional</span><br><span class="line">description: &quot;Rule description.&quot;       # optional</span><br><span class="line">enabled: true                          # required</span><br><span class="line"></span><br><span class="line">trigger:                               # required</span><br><span class="line">    type: &quot;trigger_type_ref&quot;</span><br><span class="line"></span><br><span class="line">criteria:                              # optional</span><br><span class="line">    trigger.payload_parameter_name1:</span><br><span class="line">        type: &quot;regex&quot;</span><br><span class="line">        pattern : &quot;^value$&quot;</span><br><span class="line">    trigger.payload_parameter_name2:</span><br><span class="line">        type: &quot;iequals&quot;</span><br><span class="line">        pattern : &quot;watchevent&quot;</span><br><span class="line"></span><br><span class="line">action:                                # required</span><br><span class="line">    ref: &quot;action_ref&quot;</span><br><span class="line">    parameters:                        # optional</span><br><span class="line">        foo: &quot;bar&quot;</span><br><span class="line">        baz: &quot;&#123;&#123; trigger.payload_parameter_1 &#125;&#125;&quot;</span><br></pre></td></tr></table></figure>
+<h3 id="Actions"><a href="#Actions" class="headerlink" title="Actions"></a>Actions</h3><p>Action是可以在您的环境中执行任意自动化或修复任务的代码段。它们可以用任何编程语言编写，是最小执行单元。</p>
+<ul>
+<li>local-shell-cmd/local-shell-script</li>
+<li>remote-shell-cmd/remote-shell-script</li>
+<li>python-script</li>
+<li>http-request</li>
+<li>workflow</li>
+<li>自定义</li>
+</ul>
+<p>Sample Python Action：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">name: &quot;echo_action&quot;</span><br><span class="line">runner_type: &quot;python-script&quot;</span><br><span class="line">description: &quot;Print message to standard output.&quot;</span><br><span class="line">enabled: true</span><br><span class="line">entry_point: &quot;my_echo_action.py&quot;</span><br><span class="line">parameters:</span><br><span class="line">    message:</span><br><span class="line">        type: &quot;string&quot;</span><br><span class="line">        description: &quot;Message to print.&quot;</span><br><span class="line">        required: true</span><br><span class="line">        position: 0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">import sys</span><br><span class="line"></span><br><span class="line">from st2common.runners.base_action import Action</span><br><span class="line"></span><br><span class="line">class MyEchoAction(Action):</span><br><span class="line">    def run(self, message):</span><br><span class="line">        print(message)</span><br><span class="line"></span><br><span class="line">        if message &#x3D;&#x3D; &#39;working&#39;:</span><br><span class="line">            return (True, message)</span><br><span class="line">        return (False, message)</span><br></pre></td></tr></table></figure>
+<h3 id="Workflows"><a href="#Workflows" class="headerlink" title="Workflows"></a>Workflows</h3><p>为了捕获并自动执行这些操作，StackStorm使用了工作流程。工作流将原子动作嵌入到更高级别的自动化中，并通过在正确的时间以正确的输入调用正确的动作来编排其执行。可以理解为扩展版本的Actions</p>
+<ol>
+<li>Orquesta: designed specifically for StackStorm </li>
+<li>ActionChain: one by one</li>
+<li>Mistral: a dedicated workflow service, originated in OpenStack</li>
+</ol>
+<p>Orquesta:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">version: 1.0</span><br><span class="line"></span><br><span class="line">description: A simple workflow.</span><br><span class="line"></span><br><span class="line"># A list of strings, assuming value will be provided at runtime or</span><br><span class="line"># key value pairs where value is the default value when value</span><br><span class="line"># is not provided at runtime.</span><br><span class="line">input:</span><br><span class="line">  - arg1</span><br><span class="line">  - arg2: abc</span><br><span class="line"></span><br><span class="line"># A list of key value pairs.</span><br><span class="line">vars:</span><br><span class="line">  - var1: 123</span><br><span class="line">  - var2: True</span><br><span class="line">  - var3: null</span><br><span class="line"></span><br><span class="line"># A dictionary of task definition. The order of execution is</span><br><span class="line"># determined by inbound task transition and the condition of</span><br><span class="line"># the outbound transition.</span><br><span class="line">tasks:</span><br><span class="line">  task1:</span><br><span class="line">    action: core.noop</span><br><span class="line">    next:</span><br><span class="line">      - do: task2</span><br><span class="line">  task2:</span><br><span class="line">    action: core.noop</span><br><span class="line"></span><br><span class="line"># A list of key value pairs to output.</span><br><span class="line">output:</span><br><span class="line">  - var3: &lt;% ctx().arg1 %&gt;</span><br><span class="line">  - var4:</span><br><span class="line">      var41: 456</span><br><span class="line">      var42: def</span><br><span class="line">  - var5:</span><br><span class="line">      - 1.0</span><br><span class="line">      - 2.0</span><br><span class="line">      - 3.0</span><br></pre></td></tr></table></figure>
+<p><a href="https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html">https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html</a></p>
+<h3 id="Packs"><a href="#Packs" class="headerlink" title="Packs"></a>Packs</h3><p>Packs是扩展StackStorm的集成和自动化的部署单位。Pack里包含了Actions, Workflows, Rules, Sensors。</p>
+<p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p36" alt="fe629c1ca1bc3f3841149fe8aa017d07.png"></p>
+<p>Pack如何安装到worker上：</p>
+<ol>
+<li>pull code </li>
+<li>install requirements</li>
+<li>config</li>
+<li>reload</li>
+</ol>
+]]></content>
       <tags>
-        <tag>标签1</tag>
-        <tag>标签2</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hello World</title>
-    <url>/2013/07/14/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-<a id="more"></a>]]></content>
-      <categories>
-        <category>test</category>
-      </categories>
-      <tags>
-        <tag>标签1</tag>
-        <tag>标签2</tag>
+        <tag>运维</tag>
+        <tag>StackStorm</tag>
       </tags>
   </entry>
 </search>
