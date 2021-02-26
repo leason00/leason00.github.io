@@ -14,7 +14,7 @@
 </ul>
 <a id="more"></a>
 
-<p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p34" alt="649e1caba0f4cbb43c121b074316e9db.jpeg"></p>
+<p><img src="overview.png" alt="overview"></p>
 <h4 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h4><ul>
 <li>Sensors是用于分别接收或监视事件的入站或出站集成的Python插件。 当来自外部系统的事件发生并由传感器处理时，StackStorm触发器将发射到系统中。</li>
 <li>Triggers是外部事件的StackStorm表示形式。 有通用触发器（例如定时器，webhooks）和集成触发器（例如，Sensu告警，JIRA问题更新）。 通过编写传感器插件可以定义新的触发器类型。</li>
@@ -23,7 +23,7 @@
 <li>Workflows将动作拼接成“超级Actions”，定义顺序，转换条件以及传递数据。 大多数自动化不止一步，因此需要多个动     作。 工作流就像“原子”动作一样，可在Action库中使用，并且可以手动调用或由规则触发。</li>
 <li>Packs是内容部署的单位。 它们通过对集成（触发器和动作）和自动化（规则和工作流）进行分组，简化了StackStorm可插拔内容的管理和共享。 StackStorm Exchange上有越来越多的包可用。 用户可以创建自己的包，在Github上共享它们，或者提交给StackStorm Exchange.</li>
 </ul>
-<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p35" alt="bf6047ae0c9f762d5e48233f46d44c65.png"></p>
+<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="workflow.png" alt="workflow"></p>
 <ol>
 <li>从各个服务系统通过push或pull的方式把event传给sensors</li>
 <li>sensors会产生一个trigger到规则配置中查询该trigger对应的动作或者工作流</li>
@@ -68,7 +68,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">version: 1.0</span><br><span class="line"></span><br><span class="line">description: A simple workflow.</span><br><span class="line"></span><br><span class="line"># A list of strings, assuming value will be provided at runtime or</span><br><span class="line"># key value pairs where value is the default value when value</span><br><span class="line"># is not provided at runtime.</span><br><span class="line">input:</span><br><span class="line">  - arg1</span><br><span class="line">  - arg2: abc</span><br><span class="line"></span><br><span class="line"># A list of key value pairs.</span><br><span class="line">vars:</span><br><span class="line">  - var1: 123</span><br><span class="line">  - var2: True</span><br><span class="line">  - var3: null</span><br><span class="line"></span><br><span class="line"># A dictionary of task definition. The order of execution is</span><br><span class="line"># determined by inbound task transition and the condition of</span><br><span class="line"># the outbound transition.</span><br><span class="line">tasks:</span><br><span class="line">  task1:</span><br><span class="line">    action: core.noop</span><br><span class="line">    next:</span><br><span class="line">      - do: task2</span><br><span class="line">  task2:</span><br><span class="line">    action: core.noop</span><br><span class="line"></span><br><span class="line"># A list of key value pairs to output.</span><br><span class="line">output:</span><br><span class="line">  - var3: &lt;% ctx().arg1 %&gt;</span><br><span class="line">  - var4:</span><br><span class="line">      var41: 456</span><br><span class="line">      var42: def</span><br><span class="line">  - var5:</span><br><span class="line">      - 1.0</span><br><span class="line">      - 2.0</span><br><span class="line">      - 3.0</span><br></pre></td></tr></table></figure>
 <p><a href="https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html">https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html</a></p>
 <h3 id="Packs"><a href="#Packs" class="headerlink" title="Packs"></a>Packs</h3><p>Packs是扩展StackStorm的集成和自动化的部署单位。Pack里包含了Actions, Workflows, Rules, Sensors。</p>
-<p><img src="evernotecid://4A1C4057-93FE-4241-906F-1516D067837A/appyinxiangcom/22342343/ENResource/p36" alt="fe629c1ca1bc3f3841149fe8aa017d07.png"></p>
+<p><img src="pack.png" alt="pack example"></p>
 <p>Pack如何安装到worker上：</p>
 <ol>
 <li>pull code </li>
