@@ -82,4 +82,47 @@
         <tag>StackStorm</tag>
       </tags>
   </entry>
+  <entry>
+    <title>初识Terraform</title>
+    <url>/2021/03/05/%E5%88%9D%E8%AF%86Terraform/</url>
+    <content><![CDATA[<h3 id="Terraform介绍"><a href="#Terraform介绍" class="headerlink" title="Terraform介绍"></a>Terraform介绍</h3><p>Terraform是一种开源工具，用于安全高效地预配和管理云基础结，支持多家云服务提供商。以代码的形式将所要管理的资源定义在模板中，通过解析并执行模板来自动化完成所定义资源的创建，变更和管理，进而达到自动化运维的目标。<br>是基础设施即代码的一个实现。</p>
+<span id="more"></span>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>Terraform版本：0.13.5<br>OS：Centos7 (on docker)</p>
+<h5 id="下载安装包"><a href="#下载安装包" class="headerlink" title="下载安装包"></a>下载安装包</h5><p><code>wget https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_linux_amd64.zip</code></p>
+<h5 id="解压安装包"><a href="#解压安装包" class="headerlink" title="解压安装包"></a>解压安装包</h5><p><code>unzip terraform_0.13.5_linux_amd64.zip</code><br><code>mv terraform /usr/local/bin/</code><br><code>/usr/local/bin/terraform -v</code></p>
+<p>如果看到下面这个输出，则安装成功，非常简单方便</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[root@a147d13d4ed4 &#x2F;]# terraform version</span><br><span class="line">Terraform v0.13.5</span><br></pre></td></tr></table></figure>
+
+<h3 id="安装云厂商Provider"><a href="#安装云厂商Provider" class="headerlink" title="安装云厂商Provider"></a>安装云厂商Provider</h3><p>这里以腾讯云为例<br>通过terraform init 来自动下载provider，也可以在github上找到第三方provider编译自行安装详情见：</p>
+<p>默认Plugins的安装位置在~/.terraform.d/plugins 下面，也可以通过指定-plugin-dir参数选择自定义plugins</p>
+<p>terraform init -plugin-dir /data/terraform/plugins  /data/terraform/cloud/</p>
+<p>/data/terraform/cloud/ 此目录下需要放置声明provider的tf文件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    tencentcloud &#x3D; &#123;</span><br><span class="line">      source &#x3D; &quot;tencentcloudstack&#x2F;tencentcloud&quot;</span><br><span class="line">      version &#x3D; &quot;1.46.1&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  required_version &#x3D; &quot;&gt;&#x3D; 0.13&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">provider &quot;tencentcloud&quot; &#123;</span><br><span class="line">  region &#x3D; var.region</span><br><span class="line">  secret_id &#x3D; var.secret_id</span><br><span class="line">  secret_key &#x3D; var.secret_key</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="one.png" alt="one"></p>
+<p>上面的安装输出能看到有两个动作<br><code>Initializing the backend...</code></p>
+<p><code>Initializing provider plugins...</code></p>
+<p>由于没指定backend，所以这个backend是默认的tf.state文件，当然还有很多其他类型的</p>
+<p>后面一个就是安装tf文件里声明的provider</p>
+<h3 id="资源变更"><a href="#资源变更" class="headerlink" title="资源变更"></a>资源变更</h3><p><code>terraform apply</code><br>声明一个资源文件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">data &quot;tencentcloud_images&quot; &quot;my_favorate_image&quot; &#123;</span><br><span class="line">  image_type &#x3D; [&quot;PUBLIC_IMAGE&quot;]</span><br><span class="line">  os_name    &#x3D; &quot;centos&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_instance_types&quot; &quot;my_favorate_instance_types&quot; &#123;</span><br><span class="line">  filter &#123;</span><br><span class="line">    name   &#x3D; &quot;instance-family&quot;</span><br><span class="line">    values &#x3D; [&quot;S1&quot;]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  cpu_core_count &#x3D; 1</span><br><span class="line">  memory_size    &#x3D; 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_availability_zones&quot; &quot;my_favorate_zones&quot; &#123;&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_key_pair&quot; &quot;random_key&quot; &#123;</span><br><span class="line">  key_name   &#x3D; &quot;tf_example_key6&quot;</span><br><span class="line">  public_key &#x3D; &quot;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDjd8fTnp7Dcuj4mLaQxf9Zxxxxxxxxxxxxx&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_instance&quot; &quot;foo&quot; &#123;</span><br><span class="line">  instance_name     &#x3D; var.instance_name</span><br><span class="line">  availability_zone &#x3D; data.tencentcloud_availability_zones.my_favorate_zones.zones.0.name</span><br><span class="line">  image_id          &#x3D; data.tencentcloud_images.my_favorate_image.images.0.image_id</span><br><span class="line">  instance_type     &#x3D; data.tencentcloud_instance_types.my_favorate_instance_types.instance_types.0.instance_type</span><br><span class="line">  key_name          &#x3D; tencentcloud_key_pair.random_key.id</span><br><span class="line">  system_disk_type  &#x3D; &quot;CLOUD_PREMIUM&quot;</span><br><span class="line"></span><br><span class="line">  disable_monitor_service    &#x3D; true</span><br><span class="line">  internet_max_bandwidth_out &#x3D; 2</span><br><span class="line">  count                      &#x3D; 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="two.png" alt="two"></p>
+<p>创建一个云主机附带云盘<br>apply命令是应用所有资源的变化</p>
+<p>该输出显示执行计划，描述terraform将根据配置文件执行那些动作来改变基础设施。输出格式与工具输出的diff产生的格式类似，比如git。输出内容在%20aws_instance.example%20有个%20+%20意味着Terraform将会创建该资源。在那些之下，显示将会被设置的属性。当值为<computed>时，意味着资源被创建后才能知道。</p>
+<p>创建完之后使用<code>terraform show</code>检查当前状态：</p>
+<p>如果我只想改变某个实例的状态怎么办？</p>
+<p>使用参数 <code>-target=tencentcloud_instance.foo</code></p>
+<p>同理销毁<br><code>terraform terraform destroy -target=tencentcloud_instance.foo  -var &quot;region=ap-guangzhou&quot; qcloud/</code></p>
+<h3 id="已有资源导入"><a href="#已有资源导入" class="headerlink" title="已有资源导入"></a>已有资源导入</h3><p>已有资源导入或者和声明的tf文件绑定关系</p>
+<p>terraform本身是有状态的，比如tf.state文件<br>该状态文件极其重要；它追踪创建的资源ID，所以Terraform知道它管理的是什么资源。该文件必须被保存并分发给可能使用terraform的任何人。通常建议在使用Terraform时设置<a href="https://www.terraform.io/docs/state/remote.html">远程状态</a>，来自动分享状态.</p>
+<p>导入就是让terraform拥有这些资源的状态进而进行管理</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">terraform terraform import -config&#x3D;ucloud&#x2F; ucloud_instance.outstanding3 uhost-1oevmy35</span><br></pre></td></tr></table></figure>
+
+
+<p><a href="https://www.terraform.io/intro/getting-started/build.html">以上内容皆来自官方文档</a></p>
+]]></content>
+      <tags>
+        <tag>运维</tag>
+        <tag>Terraform</tag>
+      </tags>
+  </entry>
 </search>
