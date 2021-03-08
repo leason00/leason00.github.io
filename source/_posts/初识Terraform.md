@@ -1,6 +1,7 @@
 ---
 title: 初识Terraform
 date: 2021-03-05 19:28:06
+categories: Terraform
 tags:
     - 运维
     - Terraform

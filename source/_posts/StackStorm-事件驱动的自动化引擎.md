@@ -1,6 +1,7 @@
 ---
 title: StackStorm(事件驱动的自动化引擎)
 date: 2021-02-25 20:57:38
+categories: StackStorm
 tags:
     - 运维
     - StackStorm
