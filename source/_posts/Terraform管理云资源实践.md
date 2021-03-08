@@ -16,6 +16,7 @@ Terraform是一款开源的Cli工具，网上的很多文章都是单机安装�
 * 填充资源模板
 * apply资源
 * show资源
+<!--more-->
 
 ### 初始化Terraform
 创建一个云资源目录，如cloudxxx-test001
