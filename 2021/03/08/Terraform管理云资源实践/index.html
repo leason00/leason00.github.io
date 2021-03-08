@@ -20,24 +20,21 @@
     var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Terraform介绍Terraform是一种开源工具，用于安全高效地预配和管理云基础结，支持多家云服务提供商。以代码的形式将所要管理的资源定义在模板中，通过解析并执行模板来自动化完成所定义资源的创建，变更和管理，进而达到自动化运维的目标。是基础设施即代码的一个实现。">
+  <meta name="description" content="背景Terraform是一款开源的Cli工具，网上的很多文章都是单机安装一个然后创建个目录就去操作云资源；如果在高可用的前提，如何将Terraform cli变成一个嵌入运维流程的一个组件？不仅仅是人编写tf模板然后去apply？ 自动化的驱动Terraform，无非包含这几个步骤：  初始化Terraform 填充资源模板 apply资源 show资源  初始化Terraform创建一个云资源目">
 <meta property="og:type" content="article">
-<meta property="og:title" content="初识Terraform">
-<meta property="og:url" content="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/index.html">
+<meta property="og:title" content="Terraform管理云资源实践">
+<meta property="og:url" content="http://leason.top/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/index.html">
 <meta property="og:site_name" content="Leason">
-<meta property="og:description" content="Terraform介绍Terraform是一种开源工具，用于安全高效地预配和管理云基础结，支持多家云服务提供商。以代码的形式将所要管理的资源定义在模板中，通过解析并执行模板来自动化完成所定义资源的创建，变更和管理，进而达到自动化运维的目标。是基础设施即代码的一个实现。">
+<meta property="og:description" content="背景Terraform是一款开源的Cli工具，网上的很多文章都是单机安装一个然后创建个目录就去操作云资源；如果在高可用的前提，如何将Terraform cli变成一个嵌入运维流程的一个组件？不仅仅是人编写tf模板然后去apply？ 自动化的驱动Terraform，无非包含这几个步骤：  初始化Terraform 填充资源模板 apply资源 show资源  初始化Terraform创建一个云资源目">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/one.png">
-<meta property="og:image" content="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/two.png">
-<meta property="article:published_time" content="2021-03-05T19:28:06.000Z">
+<meta property="article:published_time" content="2021-03-08T10:08:57.000Z">
 <meta property="article:modified_time" content="2021-03-08T02:11:01.349Z">
 <meta property="article:author" content="leason">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="Terraform">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/one.png">
 
-<link rel="canonical" href="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/">
+<link rel="canonical" href="http://leason.top/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/">
 
 
 <script id="page-configurations">
@@ -50,7 +47,7 @@
   };
 </script>
 
-  <title>初识Terraform | Leason</title>
+  <title>Terraform管理云资源实践 | Leason</title>
   
 
 
@@ -199,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/">
+    <link itemprop="mainEntityOfPage" href="http://leason.top/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpeg">
@@ -212,7 +209,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          初识Terraform
+          Terraform管理云资源实践
         </h1>
 
         <div class="post-meta">
@@ -221,16 +218,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2021-03-05 19:28:06" itemprop="dateCreated datePublished" datetime="2021-03-05T19:28:06+00:00">2021-03-05</time>
+              <time title="创建时间：2021-03-08 10:08:57 / 修改时间：02:11:01" itemprop="dateCreated datePublished" datetime="2021-03-08T10:08:57+00:00">2021-03-08</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-03-08 02:11:01" itemprop="dateModified" datetime="2021-03-08T02:11:01+00:00">2021-03-08</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -242,7 +233,7 @@
             </span>
 
           
-            <span id="/2021/03/05/%E5%88%9D%E8%AF%86Terraform/" class="post-meta-item leancloud_visitors" data-flag-title="初识Terraform" title="阅读次数">
+            <span id="/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/" class="post-meta-item leancloud_visitors" data-flag-title="Terraform管理云资源实践" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -257,8 +248,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2021/03/05/%E5%88%9D%E8%AF%86Terraform/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/05/%E5%88%9D%E8%AF%86Terraform/" itemprop="commentCount"></span>
+    <a title="valine" href="/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -268,7 +259,7 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>3.2k</span>
+              <span>3.1k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -287,40 +278,29 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="Terraform介绍"><a href="#Terraform介绍" class="headerlink" title="Terraform介绍"></a>Terraform介绍</h3><p>Terraform是一种开源工具，用于安全高效地预配和管理云基础结，支持多家云服务提供商。以代码的形式将所要管理的资源定义在模板中，通过解析并执行模板来自动化完成所定义资源的创建，变更和管理，进而达到自动化运维的目标。<br>是基础设施即代码的一个实现。</p>
-<span id="more"></span>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>Terraform版本：0.13.5<br>OS：Centos7 (on docker)</p>
-<h5 id="下载安装包"><a href="#下载安装包" class="headerlink" title="下载安装包"></a>下载安装包</h5><p><code>wget https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_linux_amd64.zip</code></p>
-<h5 id="解压安装包"><a href="#解压安装包" class="headerlink" title="解压安装包"></a>解压安装包</h5><p><code>unzip terraform_0.13.5_linux_amd64.zip</code><br><code>mv terraform /usr/local/bin/</code><br><code>/usr/local/bin/terraform -v</code></p>
-<p>如果看到下面这个输出，则安装成功，非常简单方便</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@a147d13d4ed4 &#x2F;]# terraform version</span><br><span class="line">Terraform v0.13.5</span><br></pre></td></tr></table></figure>
-
-<h3 id="安装云厂商Provider"><a href="#安装云厂商Provider" class="headerlink" title="安装云厂商Provider"></a>安装云厂商Provider</h3><p>这里以腾讯云为例<br>通过terraform init 来自动下载provider，也可以在github上找到第三方provider编译自行安装详情见：</p>
-<p>默认Plugins的安装位置在~/.terraform.d/plugins 下面，也可以通过指定-plugin-dir参数选择自定义plugins</p>
-<p>terraform init -plugin-dir /data/terraform/plugins  /data/terraform/cloud/</p>
-<p>/data/terraform/cloud/ 此目录下需要放置声明provider的tf文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    tencentcloud &#x3D; &#123;</span><br><span class="line">      source &#x3D; &quot;tencentcloudstack&#x2F;tencentcloud&quot;</span><br><span class="line">      version &#x3D; &quot;1.46.1&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  required_version &#x3D; &quot;&gt;&#x3D; 0.13&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">provider &quot;tencentcloud&quot; &#123;</span><br><span class="line">  region &#x3D; var.region</span><br><span class="line">  secret_id &#x3D; var.secret_id</span><br><span class="line">  secret_key &#x3D; var.secret_key</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="one.png" alt="one"></p>
-<p>上面的安装输出能看到有两个动作<br><code>Initializing the backend...</code></p>
-<p><code>Initializing provider plugins...</code></p>
-<p>由于没指定backend，所以这个backend是默认的tf.state文件，当然还有很多其他类型的</p>
-<p>后面一个就是安装tf文件里声明的provider</p>
-<h3 id="资源变更"><a href="#资源变更" class="headerlink" title="资源变更"></a>资源变更</h3><p><code>terraform apply</code><br>声明一个资源文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">data &quot;tencentcloud_images&quot; &quot;my_favorate_image&quot; &#123;</span><br><span class="line">  image_type &#x3D; [&quot;PUBLIC_IMAGE&quot;]</span><br><span class="line">  os_name    &#x3D; &quot;centos&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_instance_types&quot; &quot;my_favorate_instance_types&quot; &#123;</span><br><span class="line">  filter &#123;</span><br><span class="line">    name   &#x3D; &quot;instance-family&quot;</span><br><span class="line">    values &#x3D; [&quot;S1&quot;]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  cpu_core_count &#x3D; 1</span><br><span class="line">  memory_size    &#x3D; 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_availability_zones&quot; &quot;my_favorate_zones&quot; &#123;&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_key_pair&quot; &quot;random_key&quot; &#123;</span><br><span class="line">  key_name   &#x3D; &quot;tf_example_key6&quot;</span><br><span class="line">  public_key &#x3D; &quot;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDjd8fTnp7Dcuj4mLaQxf9Zxxxxxxxxxxxxx&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_instance&quot; &quot;foo&quot; &#123;</span><br><span class="line">  instance_name     &#x3D; var.instance_name</span><br><span class="line">  availability_zone &#x3D; data.tencentcloud_availability_zones.my_favorate_zones.zones.0.name</span><br><span class="line">  image_id          &#x3D; data.tencentcloud_images.my_favorate_image.images.0.image_id</span><br><span class="line">  instance_type     &#x3D; data.tencentcloud_instance_types.my_favorate_instance_types.instance_types.0.instance_type</span><br><span class="line">  key_name          &#x3D; tencentcloud_key_pair.random_key.id</span><br><span class="line">  system_disk_type  &#x3D; &quot;CLOUD_PREMIUM&quot;</span><br><span class="line"></span><br><span class="line">  disable_monitor_service    &#x3D; true</span><br><span class="line">  internet_max_bandwidth_out &#x3D; 2</span><br><span class="line">  count                      &#x3D; 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="two.png" alt="two"></p>
-<p>创建一个云主机附带云盘<br>apply命令是应用所有资源的变化</p>
-<p>该输出显示执行计划，描述terraform将根据配置文件执行那些动作来改变基础设施。输出格式与工具输出的diff产生的格式类似，比如git。输出内容在%20aws_instance.example%20有个%20+%20意味着Terraform将会创建该资源。在那些之下，显示将会被设置的属性。当值为<computed>时，意味着资源被创建后才能知道。</p>
-<p>创建完之后使用<code>terraform show</code>检查当前状态：</p>
-<p>如果我只想改变某个实例的状态怎么办？</p>
-<p>使用参数 <code>-target=tencentcloud_instance.foo</code></p>
-<p>同理销毁<br><code>terraform terraform destroy -target=tencentcloud_instance.foo  -var &quot;region=ap-guangzhou&quot; qcloud/</code></p>
-<h3 id="已有资源导入"><a href="#已有资源导入" class="headerlink" title="已有资源导入"></a>已有资源导入</h3><p>已有资源导入或者和声明的tf文件绑定关系</p>
-<p>terraform本身是有状态的，比如tf.state文件<br>该状态文件极其重要；它追踪创建的资源ID，所以Terraform知道它管理的是什么资源。该文件必须被保存并分发给可能使用terraform的任何人。通常建议在使用Terraform时设置<a target="_blank" rel="noopener" href="https://www.terraform.io/docs/state/remote.html">远程状态</a>，来自动分享状态.</p>
-<p>导入就是让terraform拥有这些资源的状态进而进行管理</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">terraform terraform import -config&#x3D;ucloud&#x2F; ucloud_instance.outstanding3 uhost-1oevmy35</span><br></pre></td></tr></table></figure>
-
-
-<p><a target="_blank" rel="noopener" href="https://www.terraform.io/intro/getting-started/build.html">以上内容皆来自官方文档</a></p>
+        <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>Terraform是一款开源的Cli工具，网上的很多文章都是单机安装一个然后创建个目录就去操作云资源；如果在高可用的前提，如何将Terraform cli变成一个嵌入运维流程的一个组件？不仅仅是人编写tf模板然后去apply？</p>
+<p>自动化的驱动Terraform，无非包含这几个步骤：</p>
+<ul>
+<li>初始化Terraform</li>
+<li>填充资源模板</li>
+<li>apply资源</li>
+<li>show资源</li>
+</ul>
+<h3 id="初始化Terraform"><a href="#初始化Terraform" class="headerlink" title="初始化Terraform"></a>初始化Terraform</h3><p>创建一个云资源目录，如cloudxxx-test001<br>云资源的目录下需要有Terrafor的Provider信息，以及实例声明信息。<br>创建好了模板文件，就需要初始化Terraform，以及下载Provider插件，建议提前下载好插件到指定的目录，使用容器可以直接打到镜像里<br>这样初始化直接指定plugin地址：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;usr&#x2F;local&#x2F;bin&#x2F;terraform init -plugin-dir&#x3D;&#x2F;Users&#x2F;lixiangli&#x2F;.terraform.d&#x2F;plugins</span><br></pre></td></tr></table></figure>
+<p><strong>注意:确保插件地址内有你声明的插件版本</strong></p>
+<p>由于Terraform apply是不支持选择apply哪个资源，因此上面的实现方式可以发现，一个目录是放一个云资源。为了让每次操作的影响范围是可控的。这种方式会带来一个问题，就是state的文件存储也必须是隔离的，否则出现的情况是apply 资源cloudxxx-test001时 cloudxxx-test002会被直接删除。</p>
+<h3 id="模板文件生成"><a href="#模板文件生成" class="headerlink" title="模板文件生成"></a>模板文件生成</h3><p>通过代码的方式去驱动Terraform, 无法避免的一步就是生成所对应的云资源的模板文件，我们这边使用golang，所以找到需要对接的云的Provider的文档然后定义成如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       &#x3D; &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>在程序运行时动态填充这些模板即可</p>
+<h3 id="选择合适的状态存储"><a href="#选择合适的状态存储" class="headerlink" title="选择合适的状态存储"></a>选择合适的状态存储</h3><p>Terraform是个有状态的组件，如果部署多个实例的话，官方默认的state文件的模式必然是无法满足需求的。<br>所以我们这边选择的是etcdv3<br>配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    ucloud &#x3D; &#123;</span><br><span class="line">      source &#x3D; &quot;ucloud&#x2F;ucloud&quot;</span><br><span class="line">      version &#x3D; &quot;~&gt;1.23.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  backend &quot;etcdv3&quot; &#123;</span><br><span class="line">    endpoints &#x3D; [&quot;http:&#x2F;&#x2F;127.0.0.1:2379&#x2F;&quot;]</span><br><span class="line">    lock      &#x3D; true</span><br><span class="line">    prefix    &#x3D; &quot;&#x2F;terraform-state&#x2F;clouddisk&#x2F;77c2d636-7a59-11eb-9d32-12caef3c0b88&quot;</span><br><span class="line">    cacert_path &#x3D; &quot;&quot;</span><br><span class="line">    cert_path &#x3D; &quot;&quot;</span><br><span class="line">    key_path &#x3D; &quot;&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">provider &quot;ucloud&quot; &#123;</span><br><span class="line">    public_key  &#x3D; &quot;xxxxxxx&quot;</span><br><span class="line">    private_key &#x3D; &quot;xxxxxx&quot;</span><br><span class="line">    region      &#x3D; &quot;cn-bj2&quot;</span><br><span class="line">    project_id  &#x3D; &quot;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>backend的prefix资源加了uuid，实际上是为了解决上面一个目录是放一个云资源锁带来的问题，也就是说那个uuid实际上是对应的单独资源id，每个资源都有单独的state文件</p>
+<h3 id="如何支持多云"><a href="#如何支持多云" class="headerlink" title="如何支持多云"></a>如何支持多云</h3><p>支持多云是Terraform的强项，支持多云依然需要在上次软件做好一定的屏蔽工作。<br>Terraform需要做的就是准备好多套云的tf模板去填充<br>如腾讯云：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;tencentcloud_cbs_storage&quot; &quot;tencentcloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  storage_type      &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  storage_name      &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  storage_size      &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  project_id        &#x3D; &quot;&#123;&#123; .Spec.ProjectID &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如优刻得：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       &#x3D; &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上层的数据结构可以声明成一样的，所有的差异由tf模板来屏蔽</p>
 
     </div>
 
@@ -351,7 +331,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://leason.top/2021/03/05/%E5%88%9D%E8%AF%86Terraform/" title="初识Terraform">http://leason.top/2021/03/05/初识Terraform/</a>
+    <a href="http://leason.top/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/" title="Terraform管理云资源实践">http://leason.top/2021/03/08/Terraform管理云资源实践/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -372,13 +352,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/02/25/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/" rel="prev" title="StackStorm(事件驱动的自动化引擎)">
-      <i class="fa fa-chevron-left"></i> StackStorm(事件驱动的自动化引擎)
+    <a href="/2021/03/05/%E5%88%9D%E8%AF%86Terraform/" rel="prev" title="初识Terraform">
+      <i class="fa fa-chevron-left"></i> 初识Terraform
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/" rel="next" title="Terraform管理云资源实践">
-      Terraform管理云资源实践 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -438,7 +415,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Terraform%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">Terraform介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E5%AE%89%E8%A3%85%E5%8C%85"><span class="nav-number">2.0.1.</span> <span class="nav-text">下载安装包</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A3%E5%8E%8B%E5%AE%89%E8%A3%85%E5%8C%85"><span class="nav-number">2.0.2.</span> <span class="nav-text">解压安装包</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E4%BA%91%E5%8E%82%E5%95%86Provider"><span class="nav-number">3.</span> <span class="nav-text">安装云厂商Provider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E5%8F%98%E6%9B%B4"><span class="nav-number">4.</span> <span class="nav-text">资源变更</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%B2%E6%9C%89%E8%B5%84%E6%BA%90%E5%AF%BC%E5%85%A5"><span class="nav-number">5.</span> <span class="nav-text">已有资源导入</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96Terraform"><span class="nav-number">2.</span> <span class="nav-text">初始化Terraform</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">模板文件生成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E7%8A%B6%E6%80%81%E5%AD%98%E5%82%A8"><span class="nav-number">4.</span> <span class="nav-text">选择合适的状态存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%94%AF%E6%8C%81%E5%A4%9A%E4%BA%91"><span class="nav-number">5.</span> <span class="nav-text">如何支持多云</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
