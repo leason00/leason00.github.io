@@ -94,7 +94,9 @@
 <li>初始化Terraform</li>
 <li>填充资源模板</li>
 <li>apply资源</li>
-<li>show资源</li>
+<li>show资源<span id="more"></span>
+
+</li>
 </ul>
 <h3 id="初始化Terraform"><a href="#初始化Terraform" class="headerlink" title="初始化Terraform"></a>初始化Terraform</h3><p>创建一个云资源目录，如cloudxxx-test001<br>云资源的目录下需要有Terrafor的Provider信息，以及实例声明信息。<br>创建好了模板文件，就需要初始化Terraform，以及下载Provider插件，建议提前下载好插件到指定的目录，使用容器可以直接打到镜像里<br>这样初始化直接指定plugin地址：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;usr&#x2F;local&#x2F;bin&#x2F;terraform init -plugin-dir&#x3D;&#x2F;Users&#x2F;lixiangli&#x2F;.terraform.d&#x2F;plugins</span><br></pre></td></tr></table></figure>

@@ -217,7 +217,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-03-08 10:08:57 / 修改时间：02:11:01" itemprop="dateCreated datePublished" datetime="2021-03-08T10:08:57+00:00">2021-03-08</time>
+              <time title="创建时间：2021-03-08 10:08:57 / 修改时间：02:14:02" itemprop="dateCreated datePublished" datetime="2021-03-08T10:08:57+00:00">2021-03-08</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -281,24 +281,15 @@
 <li>初始化Terraform</li>
 <li>填充资源模板</li>
 <li>apply资源</li>
-<li>show资源</li>
-</ul>
-<h3 id="初始化Terraform"><a href="#初始化Terraform" class="headerlink" title="初始化Terraform"></a>初始化Terraform</h3><p>创建一个云资源目录，如cloudxxx-test001<br>云资源的目录下需要有Terrafor的Provider信息，以及实例声明信息。<br>创建好了模板文件，就需要初始化Terraform，以及下载Provider插件，建议提前下载好插件到指定的目录，使用容器可以直接打到镜像里<br>这样初始化直接指定plugin地址：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;usr&#x2F;local&#x2F;bin&#x2F;terraform init -plugin-dir&#x3D;&#x2F;Users&#x2F;lixiangli&#x2F;.terraform.d&#x2F;plugins</span><br></pre></td></tr></table></figure>
-<p><strong>注意:确保插件地址内有你声明的插件版本</strong></p>
-<p>由于Terraform apply是不支持选择apply哪个资源，因此上面的实现方式可以发现，一个目录是放一个云资源。为了让每次操作的影响范围是可控的。这种方式会带来一个问题，就是state的文件存储也必须是隔离的，否则出现的情况是apply 资源cloudxxx-test001时 cloudxxx-test002会被直接删除。</p>
-<h3 id="模板文件生成"><a href="#模板文件生成" class="headerlink" title="模板文件生成"></a>模板文件生成</h3><p>通过代码的方式去驱动Terraform, 无法避免的一步就是生成所对应的云资源的模板文件，我们这边使用golang，所以找到需要对接的云的Provider的文档然后定义成如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       &#x3D; &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>在程序运行时动态填充这些模板即可</p>
-<h3 id="选择合适的状态存储"><a href="#选择合适的状态存储" class="headerlink" title="选择合适的状态存储"></a>选择合适的状态存储</h3><p>Terraform是个有状态的组件，如果部署多个实例的话，官方默认的state文件的模式必然是无法满足需求的。<br>所以我们这边选择的是etcdv3<br>配置如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    ucloud &#x3D; &#123;</span><br><span class="line">      source &#x3D; &quot;ucloud&#x2F;ucloud&quot;</span><br><span class="line">      version &#x3D; &quot;~&gt;1.23.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  backend &quot;etcdv3&quot; &#123;</span><br><span class="line">    endpoints &#x3D; [&quot;http:&#x2F;&#x2F;127.0.0.1:2379&#x2F;&quot;]</span><br><span class="line">    lock      &#x3D; true</span><br><span class="line">    prefix    &#x3D; &quot;&#x2F;terraform-state&#x2F;clouddisk&#x2F;77c2d636-7a59-11eb-9d32-12caef3c0b88&quot;</span><br><span class="line">    cacert_path &#x3D; &quot;&quot;</span><br><span class="line">    cert_path &#x3D; &quot;&quot;</span><br><span class="line">    key_path &#x3D; &quot;&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">provider &quot;ucloud&quot; &#123;</span><br><span class="line">    public_key  &#x3D; &quot;xxxxxxx&quot;</span><br><span class="line">    private_key &#x3D; &quot;xxxxxx&quot;</span><br><span class="line">    region      &#x3D; &quot;cn-bj2&quot;</span><br><span class="line">    project_id  &#x3D; &quot;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>backend的prefix资源加了uuid，实际上是为了解决上面一个目录是放一个云资源锁带来的问题，也就是说那个uuid实际上是对应的单独资源id，每个资源都有单独的state文件</p>
-<h3 id="如何支持多云"><a href="#如何支持多云" class="headerlink" title="如何支持多云"></a>如何支持多云</h3><p>支持多云是Terraform的强项，支持多云依然需要在上次软件做好一定的屏蔽工作。<br>Terraform需要做的就是准备好多套云的tf模板去填充<br>如腾讯云：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;tencentcloud_cbs_storage&quot; &quot;tencentcloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  storage_type      &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  storage_name      &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  storage_size      &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  project_id        &#x3D; &quot;&#123;&#123; .Spec.ProjectID &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如优刻得：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone &#x3D; &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              &#x3D; &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         &#x3D; &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         &#x3D; &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       &#x3D; &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上层的数据结构可以声明成一样的，所有的差异由tf模板来屏蔽</p>
-
+<li>show资源
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/03/08/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -348,7 +339,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-03-08 02:11:01" itemprop="dateModified" datetime="2021-03-08T02:11:01+00:00">2021-03-08</time>
+                <time title="修改时间：2021-03-08 02:14:02" itemprop="dateModified" datetime="2021-03-08T02:14:02+00:00">2021-03-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -464,7 +455,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-03-08 02:11:01" itemprop="dateModified" datetime="2021-03-08T02:11:01+00:00">2021-03-08</time>
+                <time title="修改时间：2021-03-08 02:14:02" itemprop="dateModified" datetime="2021-03-08T02:14:02+00:00">2021-03-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
