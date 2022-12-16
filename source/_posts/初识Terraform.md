@@ -54,7 +54,7 @@ provider "tencentcloud" {
   secret_key = var.secret_key
 }
 ```
-![one](one.png)
+![one](初识Terraform/one.png)
 
 上面的安装输出能看到有两个动作
 `Initializing the backend...`
@@ -104,7 +104,7 @@ resource "tencentcloud_instance" "foo" {
   count                      = 1
 }
 ```
-![two](two.png)
+![two](初识Terraform/two.png)
 
 创建一个云主机附带云盘
 apply命令是应用所有资源的变化

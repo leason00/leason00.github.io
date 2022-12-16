@@ -19,7 +19,7 @@ StackStorm是一个功能强大的开源自动化平台，可将所有应用程�
 
 <!--more-->
 
-![overview](overview.png)
+![overview](StackStorm-事件驱动的自动化引擎/overview.png)
 #### 角色
 * Sensors是用于分别接收或监视事件的入站或出站集成的Python插件。 当来自外部系统的事件发生并由传感器处理时，StackStorm触发器将发射到系统中。
 * Triggers是外部事件的StackStorm表示形式。 有通用触发器（例如定时器，webhooks）和集成触发器（例如，Sensu告警，JIRA问题更新）。 通过编写传感器插件可以定义新的触发器类型。
@@ -29,7 +29,7 @@ StackStorm是一个功能强大的开源自动化平台，可将所有应用程�
 * Packs是内容部署的单位。 它们通过对集成（触发器和动作）和自动化（规则和工作流）进行分组，简化了StackStorm可插拔内容的管理和共享。 StackStorm Exchange上有越来越多的包可用。 用户可以创建自己的包，在Github上共享它们，或者提交给StackStorm Exchange.
 
 #### 流程
-![workflow](workflow.png)
+![workflow](StackStorm-事件驱动的自动化引擎/workflow.png)
 1. 从各个服务系统通过push或pull的方式把event传给sensors
 2. sensors会产生一个trigger到规则配置中查询该trigger对应的动作或者工作流
 3. 将来自工作流的Action发送到消息队列（内置rabbitmq）中Actions到达外部的系统后就执行相应的动作
@@ -239,7 +239,7 @@ https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html
 ### Packs
 Packs是扩展StackStorm的集成和自动化的部署单位。Pack里包含了Actions, Workflows, Rules, Sensors。
 
-![pack example](pack.png)
+![pack example](StackStorm-事件驱动的自动化引擎/pack.png)
 
 
 Pack如何安装到worker上：
