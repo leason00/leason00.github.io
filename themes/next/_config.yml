@@ -255,9 +255,9 @@ post_meta:
 # Post wordcount display settings
 # Dependencies: https://github.com/theme-next/hexo-symbols-count-time
 symbols_count_time:
-  separated_meta: true
-  item_text_post: true
-  item_text_total: true
+  separated_meta: false
+  item_text_post: false
+  item_text_total: false
   awl: 4                # 计算字数的一个设置,没设置过
   wpm: 275              # 一分钟阅读的字数
 
@@ -523,7 +523,7 @@ pjax: false
 
 # FancyBox is a tool that offers a nice and elegant way to add zooming functionality for images.
 # For more information: https://fancyapps.com/fancybox
-fancybox: false
+fancybox: true
 
 # A JavaScript library for zooming images like Medium.
 # Do not enable both `fancybox` and `mediumzoom`.
