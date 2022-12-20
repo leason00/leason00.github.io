@@ -54,6 +54,7 @@ provider "tencentcloud" {
   secret_key = var.secret_key
 }
 ```
+
 ![one](初识Terraform/one.png)
 
 上面的安装输出能看到有两个动作
