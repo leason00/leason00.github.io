@@ -1,7 +1,7 @@
 {% extends '_layout.swig' %}
 {% import '_macro/sidebar.swig' as sidebar_template with context %}
 <meta name="baidu-site-verification" content="code-v7Cv9HHNan" />
-{% block title %}{{ title }}{%- if theme.index_with_subtitle and subtitle %} - {{ subtitle }}{%- endif %}{% endblock %}
+{% block title %}{{ theme.keywords }} - {{ title }}{{ theme.description }}{%- if theme.index_with_subtitle and subtitle %} - {{ subtitle }}{%- endif %}{% endblock %}
 
 {% block class %}index posts-expand{% endblock %}
 
