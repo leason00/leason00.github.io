@@ -11,11 +11,24 @@ author: leason
 language: zh-CN
 timezone: ''
 
+sitemap:
+  path: sitemap.xml
+baidusitemap:
+  path: baidusitemap.xml
+
+
+baidu_url_submit:
+  count: 3
+  host: https://leason.top
+  token:
+  path: baidu_urls.txt
+
 # URL
 ## If your site is put in a subdirectory, set url as 'http://example.com/child' and root as '/child/'
-url: http://leason.top
+url: https://leason.top
 root: /
-permalink: :year/:month/:day/:title/
+#permalink: :year/:month/:day/:title/
+permalink: :title.html
 permalink_defaults:
 pretty_urls:
   trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
@@ -103,10 +116,12 @@ theme: next
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
-  type: git
-  repo: https://github.com/leason00/leason00.github.io
-  # example, https://github.com/hexojs/hexojs.github.io
-  branch: gh-pages
+  - type: git
+    repo: https://github.com/leason00/leason00.github.io
+    # example, https://github.com/hexojs/hexojs.github.io
+    branch: gh-pages
+  - type: baidu_url_submitter
+
 
 # 搜索
 search:
