@@ -58,6 +58,7 @@
       </div>
     {%- endif %}
   {%- endif %}
+  {% include '_custom/google_adsense.swig' %}
 {%- endif %}
 
 <script>
