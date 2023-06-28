@@ -5,7 +5,7 @@
 # Site
 title: Leason
 subtitle: Leason`s Blog
-description: 'Leason`s Blog'
+description: '专注运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
 keywords: coder
 author: leason
 language: zh-CN
@@ -132,8 +132,8 @@ search:
 
 symbols_count_time:
   #文章内是否显示
-  symbols: true
-  time: true
+  symbols: false
+  time: false
   # 网页底部是否显示
-  total_symbols: true
-  total_time: true
+  total_symbols: false
+  total_time: false

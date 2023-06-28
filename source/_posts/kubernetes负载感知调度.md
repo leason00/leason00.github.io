@@ -1,9 +1,13 @@
 ---
 title: kubernetes负载感知调度
 date: 2023-05-29 14:34:58
+categories: 混部
 tags:
-keywords:
-description:
+- 混部
+- 云原生
+- Kubernetes
+- koordinator
+keywords: kubernetes负载感知调度实践
 ---
 
 ## 背景

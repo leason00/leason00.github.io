@@ -1,10 +1,12 @@
 ---
 title: koordinator混部系统
 date: 2022-12-16 17:23:49
+categories: 混部
 tags:
 - 混部
 - 云原生
 - Kubernetes
+- koordinator
 keywords: 云原生混部系统
 description: koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。
 ---
