@@ -13,5 +13,4 @@
 
 {% block sidebar %}
   {{ sidebar_template.render(true) }}
-  {% include '_custom/google_adsense.swig' %}
 {% endblock %}

@@ -58,8 +58,8 @@
       </div>
     {%- endif %}
   {%- endif %}
-  {% include '_custom/google_adsense.swig' %}
 {%- endif %}
+{{ partial('_custom/google_adsense.swig') }}
 
 <script>
   window.addEventListener('tabs:register', () => {

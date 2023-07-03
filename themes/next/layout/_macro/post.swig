@@ -166,7 +166,6 @@
     {### POST BODY ###}
     {#################}
     <div class="post-body{%- if post.direction and post.direction.toLowerCase() === 'rtl' %} rtl{%- endif %}" itemprop="articleBody">
-
       {# Gallery support #}
       {%- if post.photos and post.photos.length %}
         <div class="post-gallery" itemscope itemtype="http://schema.org/ImageGallery">
@@ -203,6 +202,7 @@
           {{ post.content }}
         {%- endif %}
       {% else %}
+        {{ partial('_custom/google_adsense_inner.swig') }}
         {{ post.content }}
       {%- endif %}
     </div>
