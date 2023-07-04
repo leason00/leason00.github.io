@@ -6,7 +6,7 @@
 title: Leason
 subtitle: Leason`s Blog
 description: '专注运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
-keywords: coder
+keywords: '专注运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
 author: leason
 language: zh-CN
 timezone: ''
@@ -18,9 +18,9 @@ baidusitemap:
 
 
 baidu_url_submit:
-  count: 3
+  count: 200
   host: https://leason.top
-  token:
+  token: YdshJzY6o5TWjz3X
   path: baidu_urls.txt
 
 # URL
