@@ -9,7 +9,7 @@ keywords:
    - Packer
    - 系统镜像
    - hcl
-description: 使用Packer构建系统镜像
+
 ---
 ## 什么是Packer
 [Packer](https://www.packer.io/) 是一个强大的工具，它可以帮助我们轻松地构建各种类型的镜像，如虚拟机镜像、Docker 镜像等。
