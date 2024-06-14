@@ -46,6 +46,8 @@ Packer包含构建器(Builder),（派生器）Provisioner,(后处理器)Post-Pro
 | Packer-plugin-qemu | 1.0.10 | Packer 插件
 | qemu-kvm | 7.0.0 | QEMU 7.0.0
 
+![构建流程](使用Packer构建镜像/WX20240614-153140.png)
+
 ### 模板
 ```json
 packer {
