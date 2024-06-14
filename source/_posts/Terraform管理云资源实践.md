@@ -3,7 +3,7 @@ title: Terraform管理云资源实践
 date: 2021-03-08 10:08:57
 categories: Terraform
 tags:
-    - 运维
+    - 运维自动化
     - Terraform
 ---
 

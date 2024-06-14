@@ -43,7 +43,7 @@ Crane: https://gocrane.io/
 
 相对于 Koordinator 专门为混部而生的软件，Crane以 Finops 为出发点，二者相比Koordinator更适合我们，在离线混部也是下一步计划。
 
-[调研测试][https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html]
+[调研测试](https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html)
 
 上线之后：
 ![cpu使用率离散图](kubernetes负载感知调度/new_cpu_use.png)

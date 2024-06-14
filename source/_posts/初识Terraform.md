@@ -2,8 +2,13 @@
 title: 初识Terraform
 date: 2021-03-05 19:28:06
 categories: Terraform
+keywords:
+  - 运维自动化
+  - Terraform
+  - 资源交付
+  - 云资源
 tags:
-    - 运维
+    - 运维自动化
     - Terraform
 ---
 ### Terraform介绍
