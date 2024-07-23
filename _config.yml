@@ -5,8 +5,8 @@
 # Site
 title: Leason
 subtitle: 腹有诗书气自华
-description: '专注运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
-keywords: '专注运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
+description: '运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
+keywords: '运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生'
 author: leason
 language: zh-CN
 timezone: ''
