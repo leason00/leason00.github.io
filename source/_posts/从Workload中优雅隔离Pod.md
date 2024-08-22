@@ -41,7 +41,7 @@ preStop:
 
 2. 将Pod从Workload中移除
 
-调用下线完毕之后，再修改Pod的标签，这个标签的修改可以让Pod脱离Workload的控制，变成孤儿Pod， 这样Pod也就从endpoint中移除，服务发现也就感知不到这个节点了。
+调用下线完毕之后，再修改Pod的标签，这个标签的修改可以让Pod脱离Workload的控制，变成孤儿Pod，注意修改Pod标签也要让service的selector选择不到这个Pod，这样Pod也就从endpoint中移除，服务发现也就感知不到这个节点了。
 
 
 3. 如果Pod是消费型业务，比如说 nsq worker，不具备主动发起下线怎么办？
