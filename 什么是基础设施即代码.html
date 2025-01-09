@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941" crossorigin="anonymous"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpeg">
+  <link rel="mask-icon" href="/images/avatar.jpeg" color="#222">
+  <meta name="google-site-verification" content="EKetkcQ0dzMReT-fhICBCc1eBTh3FLcFgh6gLTmp6pw">
+  <meta name="baidu-site-verification" content="codeva-DU6BjsezSk">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="基础设施即代码（Infrastructure as Code）是一种将基础设施的配置和管理过程自动化的方法。它借鉴了软件开发中的一些实践，如版本控制、自动化测试和持续集成，将基础设施的配置和管理过程描述为可执行的代码。 通过使用基础设施即代码，开发团队可以将基础设施的配置和管理过程存储为代码，并将其纳入版本控制系统中。这样一来，团队成员可以对基础设施进行版本控制、进行代码审查和合并，并且可以使用自">
+<meta property="og:type" content="article">
+<meta property="og:title" content="什么是基础设施即代码">
+<meta property="og:url" content="https://leason.top/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html">
+<meta property="og:site_name" content="Leason">
+<meta property="og:description" content="基础设施即代码（Infrastructure as Code）是一种将基础设施的配置和管理过程自动化的方法。它借鉴了软件开发中的一些实践，如版本控制、自动化测试和持续集成，将基础设施的配置和管理过程描述为可执行的代码。 通过使用基础设施即代码，开发团队可以将基础设施的配置和管理过程存储为代码，并将其纳入版本控制系统中。这样一来，团队成员可以对基础设施进行版本控制、进行代码审查和合并，并且可以使用自">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-06-28T03:43:02.000Z">
+<meta property="article:modified_time" content="2025-01-09T07:42:54.459Z">
+<meta property="article:author" content="leason">
+<meta property="article:tag" content="运维自动化">
+<meta property="article:tag" content="Terraform">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://leason.top/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>什么是基础设施即代码 | Leason</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e616a81d6078fbbb42d683fb72a3ce3f";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Leason</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">腹有诗书气自华</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://leason.top/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="leason">
+      <meta itemprop="description" content="运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Leason">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          什么是基础设施即代码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-28 11:43:02" itemprop="dateCreated datePublished" datetime="2023-06-28T11:43:02+08:00">2023-06-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-09 15:42:54" itemprop="dateModified" datetime="2025-01-09T15:42:54+08:00">2025-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Terraform/" itemprop="url" rel="index"><span itemprop="name">Terraform</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">基础设施即代码（Infrastructure as Code）是一种将基础设施的配置和管理过程自动化的方法。它借鉴了软件开发中的一些实践，如版本控制、自动化测试和持续集成，将基础设施的配置和管理过程描述为可执行的代码。 通过使用基础设施即代码，开发团队可以将基础设施的配置和管理过程存储为代码，并将其纳入版本控制系统中。这样一来，团队成员可以对基础设施进行版本控制、进行代码审查和合并，并且可以使用自动化工具来验证和部署基础设施的更新。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+      
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="6313778550"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <p>基础设施即代码（Infrastructure as Code）是一种将基础设施的配置和管理过程自动化的方法。它借鉴了软件开发中的一些实践，如版本控制、自动化测试和持续集成，将基础设施的配置和管理过程描述为可执行的代码。</p>
+<p>通过使用基础设施即代码，开发团队可以将基础设施的配置和管理过程存储为代码，并将其纳入版本控制系统中。这样一来，团队成员可以对基础设施进行版本控制、进行代码审查和合并，并且可以使用自动化工具来验证和部署基础设施的更新。</p>
+<p>借助基础设施即代码，可以实现以下优势：</p>
+<ul>
+<li>可重复性和可靠性：通过代码来定义基础设施，可以确保环境的一致性，避免了人工配置的差错，并且可以重复使用、再现和共享配置。</li>
+<li>自动化和可伸缩性：通过自动化工具，可以更快速、可靠地创建、更新和销毁基础设施，提高部署效率和灵活性，并支持快速的扩展和缩减。</li>
+<li>文档化和可视化：基础设施即代码的代码本身可以作为文档，提供对基础设施配置的清晰描述，同时可以生成可视化的拓扑图或文档来展示基础设施的结构和关系。<br>总之，基础设施即代码是一种有效的方法，可以提高基础设施的可管理性、可测试性和可靠性，促进基础设施和应用程序的协同演进。</li>
+</ul>
+<p>以上是ChatGPT对基础设施即代码的理解。</p>
+<span id="more"></span>
+
+<p>我们在基于 Terraform 落地基础设施即代码时，遇到了一个很有趣的问题，这个问题让我对基础设施即代码有了更深刻的理解。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>使用 Terraform 托管腾讯云 MySQL 实例时，这这么一个字段：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">first_slave_zone</span> <span class="bullet">-</span> <span class="string">(Optional,</span> <span class="string">String,</span> <span class="string">ForceNew)</span> <span class="string">Zone</span> <span class="string">information</span> <span class="string">about</span> <span class="string">first</span> <span class="string">slave</span> <span class="string">instance.</span></span><br></pre></td></tr></table></figure>
+<p>这个字段指的是第一个备库可用区，注意这个字段是 ForceNew 定义，也就是说，如果这个字段发生变化，那么这个实例就会被重新创建。<br>我们的要求是主备在不同的可用区，所以我们在配置文件中这么写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">resource &quot;tencentcloud_mysql_instance&quot; &quot;main&quot; &#123;</span><br><span class="line">        ...</span><br><span class="line">        availability_zone = zone1</span><br><span class="line">        first_slave_zone  = zone2</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        tags = &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        parameters = &#123;</span><br><span class="line">          character_set_server = &quot;utf8mb4&quot;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>看起来一切都很完美，但是当有一天dba在对一个实例进行常规的磁盘扩容时，发现这个实例被重新创建了，老的实例被销毁了，直接故障十分钟（发现销毁后从腾讯云回收站找回）。</p>
+<p>首先要说明的是我们的 Terraform 不是用过 cli 的方式使用的，我们在内部落地了一套自动化方案，具体可以翻前面的文章。对于任何变化，都是auto approve。</p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>通过查看日志，我们发现了这么一段：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">Terraform used the selected providers to generate the following execution</span><br><span class="line">plan. Resource actions are indicated with the following symbols:</span><br><span class="line">  ~ update in-place</span><br><span class="line">-/+ destroy and then create replacement</span><br><span class="line"></span><br><span class="line">Terraform will perform the following actions:</span><br><span class="line"></span><br><span class="line">  # tencentcloud_mysql_instance.main must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_mysql_instance&quot; &quot;main&quot; &#123;</span><br><span class="line">      ~ first_slave_zone  = &quot;ap-beijing-7&quot; -&gt; &quot;ap-beijing-5&quot; # forces replacement</span><br><span class="line">      ~ gtid              = 1 -&gt; (known after apply)</span><br><span class="line">      ~ id                = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">      + internet_host     = (known after apply)</span><br><span class="line">      ~ internet_port     = 0 -&gt; (known after apply)</span><br><span class="line">      ~ intranet_ip       = &quot;xxxxxxxxx&quot; -&gt; (known after apply)</span><br><span class="line">      ~ locked            = 0 -&gt; (known after apply)</span><br><span class="line">      - pay_type          = -1 -&gt; null</span><br><span class="line">      - period            = -1 -&gt; null</span><br><span class="line">      ~ status            = 1 -&gt; (known after apply)</span><br><span class="line">      - tags              = &#123;&#125; -&gt; null</span><br><span class="line">      ~ task_status       = 0 -&gt; (known after apply)</span><br><span class="line">      ~ volume_size       = 800 -&gt; 1200</span><br><span class="line">        # (22 unchanged attributes hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  # tencentcloud_mysql_readonly_instance.readonly will be updated in-place</span><br><span class="line">  ~ resource &quot;tencentcloud_mysql_readonly_instance&quot; &quot;readonly&quot; &#123;</span><br><span class="line">        id                 = &quot;xxxx&quot;</span><br><span class="line">      ~ master_instance_id = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">        tags               = &#123;&#125;</span><br><span class="line">      ~ volume_size        = 800 -&gt; 1200</span><br><span class="line">        # (22 unchanged attributes hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">Plan: 1 to add, 1 to change, 1 to destroy.</span><br><span class="line"></span><br><span class="line">Changes to Outputs:</span><br><span class="line">  ~ instance_id = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">  ~ instance_ip = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">  ~ locked      = 0 -&gt; (known after apply)</span><br><span class="line">  ~ status      = 1 -&gt; (known after apply)</span><br><span class="line">  ~ task_status = 0 -&gt; (known after apply)</span><br><span class="line">tencentcloud_mysql_instance.main: Destroying... [id=xxxxxx]</span><br><span class="line">tencentcloud_mysql_instance.main: Still destroying... [id=xxxx, 10s elapsed]</span><br><span class="line">tencentcloud_mysql_instance.main: Destruction complete after 12s</span><br><span class="line">tencentcloud_mysql_instance.main: Creating...</span><br><span class="line">tencentcloud_mysql_instance.main: Still creating... [10s elapsed]</span><br></pre></td></tr></table></figure>
+
+<p>很容易发现 first_slave_zone  &#x3D; “ap-beijing-7” -&gt; “ap-beijing-5” # forces replacement 这个字段导致了销毁重建。<br>但是问题是我们的备库实例怎么从 ap-beijing-5 变成了 ap-beijing-7哪？</p>
+<p>了解MySQL主备架构的都知道，主备切换是一个非常常见的现象，腾讯的技术支持表示，网络抖动、运维动作都可能会出现主备切换，而主备切换后，备库的可用区会变成主库的可用区，这个时候，如果我们的配置文件中没有更新 first_slave_zone 这个字段，就会导致Terraform中判定这个字段改动了，最可怕的是这个字段还是 ForceNew。</p>
+<p>腾讯的技术同学一开始表示，他们的系统没问题，是我们使用的问题，不过我们也承认，我们对接的过程中对MySQL的这个架构理解不够深，假如我们足够理解的话，我们不会认同这种Api的设计。</p>
+<p>所以在这里重新回到文章的标题，仔细思考什么是基础设施即代码。按照我们的理解我们固定在代码中的配置理论上不应该发生改变，假如说改变了，一定是不符合预期的，需要回到代码中定义的状态。<br>但是我们这个case中，切换应该是预期合理的行为，不应该销毁实例重建，因此我们认为这是Api设计问题。</p>
+<p>像这种主备状态，我们认为应该是一个状态，而不是一个配置，不应该固定在代码中。这种思想类比到k8s的Api中也是一样，资源都有Spec和Status两个字段，Spec是用户指定的，Status是系统自动计算的，用户不应该去指定更不能修改。</p>
+<p>为了证明我们的理解没问题，说服他们，我们也看了其他云厂商的Api设计，比如Aws的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">availability_zones - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.</span><br></pre></td></tr></table></figure>
+
+<p>这里的设计是Optional，而且是一个列表，而不是一个字符串，这样设计用户指定的是一个可用区列表，而不是一个可用区，这样的设计就不会出现我们这个case中的问题。<br>无论实例在运行中如何切换都不影响，只要主备是在一个可用区列表中，就是符合预期的。</p>
+<h2 id="最终"><a href="#最终" class="headerlink" title="最终"></a>最终</h2><p>在腾讯云最新的 Api 中仅仅是把 first_slave_zone 从 ForceNew 改成了 Optional，但是这样的设计还是会出现跟用户操作无关的 first_slave_zone 改变去重建备库。作为用户的话，我很冤枉，我没动这个字段，但是我的备库重建了，我反正无法接受这个事情。</p>
+<p>在这个case中，我们认为腾讯云的对于MySQL的Api设计是有问题的，我们也提出了我们的理解，希望腾讯云能够改进这个Api设计，让用户的体验更好。<br>另外对于基础设施即代码的实践过程中，无论是设计Api还是对接Api的时候，需要充分甄别什么是配置，什么是状态。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>赞赏一杯咖啡</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="leason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>leason
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://leason.top/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html" title="什么是基础设施即代码">https://leason.top/什么是基础设施即代码.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4%E8%87%AA%E5%8A%A8%E5%8C%96/" rel="tag"># 运维自动化</a>
+              <a href="/tags/Terraform/" rel="tag"># Terraform</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html" rel="prev" title="kubernetes负载感知调度">
+      <i class="fa fa-chevron-left"></i> kubernetes负载感知调度
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/%E4%BD%BF%E7%94%A8Packer%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F.html" rel="next" title="使用Packer构建镜像">
+      使用Packer构建镜像 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E7%BB%88"><span class="nav-number">3.</span> <span class="nav-text">最终</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="leason"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">leason</p>
+  <div class="site-description" itemprop="description">运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leason00" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leason00" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2395491531@qq.com" title="E-Mail → mailto:2395491531@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/images/wechat.png" title="WeChat → &#x2F;images&#x2F;wechat.png"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+
+
+      </div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leason</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '972ae4a1b3613217a544',
+      clientSecret: 'ccebe5ee6207db60d90d5c11a7b43b98cdca188b',
+      repo        : 'leason00.github.io',
+      owner       : 'leason00',
+      admin       : ['leason00'],
+      id          : 'a239e9de8a1418cbc1b094a7e59ac9c1',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

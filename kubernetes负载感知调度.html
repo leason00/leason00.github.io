@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941" crossorigin="anonymous"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpeg">
+  <link rel="mask-icon" href="/images/avatar.jpeg" color="#222">
+  <meta name="google-site-verification" content="EKetkcQ0dzMReT-fhICBCc1eBTh3FLcFgh6gLTmp6pw">
+  <meta name="baidu-site-verification" content="codeva-DU6BjsezSk">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="背景kubernetes 的原生调度器只能通过资源请求来调度 pod，这很容易造成一系列负载不均的问题，并且很多情况下业务方都是超额申请资源，因此在原生调度器时代我们针对业务的特性以及评估等级来设置 Requests&#x2F;Limit 比例来提升资源利用效率。在这种场景下依然存在很多问题：  节点负载不均：原生 Kubernetes Scheduler 根据 Requests 和节点可分配总量">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kubernetes负载感知调度">
+<meta property="og:url" content="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html">
+<meta property="og:site_name" content="Leason">
+<meta property="og:description" content="背景kubernetes 的原生调度器只能通过资源请求来调度 pod，这很容易造成一系列负载不均的问题，并且很多情况下业务方都是超额申请资源，因此在原生调度器时代我们针对业务的特性以及评估等级来设置 Requests&#x2F;Limit 比例来提升资源利用效率。在这种场景下依然存在很多问题：  节点负载不均：原生 Kubernetes Scheduler 根据 Requests 和节点可分配总量">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/old_cpu_use.png">
+<meta property="og:image" content="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/new_cpu_use.png">
+<meta property="article:published_time" content="2023-05-29T06:34:58.000Z">
+<meta property="article:modified_time" content="2025-01-09T07:42:54.459Z">
+<meta property="article:author" content="leason">
+<meta property="article:tag" content="云原生">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="混部">
+<meta property="article:tag" content="koordinator">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/old_cpu_use.png">
+
+<link rel="canonical" href="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kubernetes负载感知调度 | Leason</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e616a81d6078fbbb42d683fb72a3ce3f";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Leason</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">腹有诗书气自华</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="leason">
+      <meta itemprop="description" content="运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Leason">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kubernetes负载感知调度
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-29 14:34:58" itemprop="dateCreated datePublished" datetime="2023-05-29T14:34:58+08:00">2023-05-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-09 15:42:54" itemprop="dateModified" datetime="2025-01-09T15:42:54+08:00">2025-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B7%B7%E9%83%A8/" itemprop="url" rel="index"><span itemprop="name">混部</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+      
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="6313778550"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>kubernetes 的原生调度器只能通过资源请求来调度 pod，这很容易造成一系列负载不均的问题，<br>并且很多情况下业务方都是超额申请资源，因此在原生调度器时代我们针对业务的特性以及评估等级来设置 Requests&#x2F;Limit 比例来提升资源利用效率。<br>在这种场景下依然存在很多问题：</p>
+<ol>
+<li>节点负载不均：原生 Kubernetes Scheduler 根据 Requests 和节点可分配总量来调度 Pod，既不考虑实时负载，也不估计使用量，这种纯静态的调度导致节点资源利用率分配不均。<br>在流量波动性业务的场景下，在流量高峰时，部分节点利用率突破安全阈值，但是很多节点的利用率特别点，节点利用率相差特别大</li>
+<li>业务周期性：在离线集群分离，在线集群底峰存在巨大资源浪费</li>
+</ol>
+<span id="more"></span>
+<p>本文主要讨论如果解决问题一，在线集群内部提升资源利用率</p>
+<p>在线集群 Cpu 离散系数0.45，整个集群高峰时 Cpu 利用率仅25%左右；下图 Cpu 使用率离散图：</p>
+<p><img src="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/old_cpu_use.png" alt="cpu使用率离散图"></p>
+<h2 id="破局"><a href="#破局" class="headerlink" title="破局"></a>破局</h2><p>基于上述情况，高峰时 Cpu 利用率仅25%肯定不是合理的情况，业界做的好的50%+。想要继续提升利用率，必须解决节点负载不均问题：</p>
+<ol>
+<li>感知节点真实负载：要解决节点负载不均问题，必须要上报节点当前真实的负载</li>
+<li>基于负载的正向调度插件：在默认调度器的基础上增加基于负载的调度插件，在正向调度是尽量保证节点间水位平均</li>
+<li>基于负载的重调度组件：当业务不断波动，节点可能会因为应用负载变化导致节点负载出现差别，需要重调度迁移 Pod 重新达到平均</li>
+</ol>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>关注的两个开源项目：</p>
+<p>Koordinator: <a target="_blank" rel="noopener" href="https://koordinator.sh/">https://koordinator.sh/</a></p>
+<p>Crane: <a target="_blank" rel="noopener" href="https://gocrane.io/">https://gocrane.io/</a></p>
+<p>相对于 Koordinator 专门为混部而生的软件，Crane以 Finops 为出发点，二者相比Koordinator更适合我们，在离线混部也是下一步计划。</p>
+<p><a href="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html">调研测试</a></p>
+<p>上线之后：<br><img src="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/new_cpu_use.png" alt="cpu使用率离散图"></p>
+<h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ol>
+<li>热点节点问题：在业务高峰时，节点负载变高，会出现热点节点，这个时候需要重调度组件介入，把 Pod 重新调度到其他节点上</li>
+</ol>
+<p>需要前置打散热点节点，这就需要对应用进行资源画像，在调度中分散这种类型的应用，避免业务高峰热点节点的产生<br>2. 在1中的情况下，扩容部分节点缓解集群压力时，新上的节点会迅速被热点Pod占满，导致节点负载升高，再次触发重调度</p>
+<p>调整调度插件中负载均衡打分插件的权重，让节点负载更均衡，避免热点节点问题<br>3. 找到合适的节点规格，小规格节点，更容器出现热点节点</p>
+<p>在我们的业务场景下下，当前来看48c节点热点节点出现几率小于32c</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>赞赏一杯咖啡</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="leason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>leason
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://leason.top/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html" title="kubernetes负载感知调度">https://leason.top/kubernetes负载感知调度.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%BA%91%E5%8E%9F%E7%94%9F/" rel="tag"># 云原生</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/%E6%B7%B7%E9%83%A8/" rel="tag"># 混部</a>
+              <a href="/tags/koordinator/" rel="tag"># koordinator</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html" rel="prev" title="koordinator混部系统">
+      <i class="fa fa-chevron-left"></i> koordinator混部系统
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html" rel="next" title="什么是基础设施即代码">
+      什么是基础设施即代码 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A0%B4%E5%B1%80"><span class="nav-number">2.</span> <span class="nav-text">破局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.1.</span> <span class="nav-text">遇到的问题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="leason"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">leason</p>
+  <div class="site-description" itemprop="description">运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leason00" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leason00" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2395491531@qq.com" title="E-Mail → mailto:2395491531@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/images/wechat.png" title="WeChat → &#x2F;images&#x2F;wechat.png"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+
+
+      </div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leason</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '972ae4a1b3613217a544',
+      clientSecret: 'ccebe5ee6207db60d90d5c11a7b43b98cdca188b',
+      repo        : 'leason00.github.io',
+      owner       : 'leason00',
+      admin       : ['leason00'],
+      id          : 'e0bce32391db162fdc47243ef7e4795a',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

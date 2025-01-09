@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941" crossorigin="anonymous"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpeg">
+  <link rel="mask-icon" href="/images/avatar.jpeg" color="#222">
+  <meta name="google-site-verification" content="EKetkcQ0dzMReT-fhICBCc1eBTh3FLcFgh6gLTmp6pw">
+  <meta name="baidu-site-verification" content="codeva-DU6BjsezSk">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="koordinator混部系统">
+<meta property="og:url" content="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html">
+<meta property="og:site_name" content="Leason">
+<meta property="og:description" content="koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/architecture.png">
+<meta property="og:image" content="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/schedule.png">
+<meta property="og:image" content="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/result.png">
+<meta property="article:published_time" content="2022-12-16T09:23:49.000Z">
+<meta property="article:modified_time" content="2025-01-09T07:42:54.447Z">
+<meta property="article:author" content="leason">
+<meta property="article:tag" content="云原生">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="混部">
+<meta property="article:tag" content="koordinator">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/architecture.png">
+
+<link rel="canonical" href="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>koordinator混部系统 | Leason</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e616a81d6078fbbb42d683fb72a3ce3f";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Leason</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">腹有诗书气自华</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="leason">
+      <meta itemprop="description" content="运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Leason">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          koordinator混部系统
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-12-16 17:23:49" itemprop="dateCreated datePublished" datetime="2022-12-16T17:23:49+08:00">2022-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-09 15:42:54" itemprop="dateModified" datetime="2025-01-09T15:42:54+08:00">2025-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%B7%B7%E9%83%A8/" itemprop="url" rel="index"><span itemprop="name">混部</span></a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+      
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="6313778550"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>官网： <a target="_blank" rel="noopener" href="https://koordinator.sh/">https://koordinator.sh/</a></p>
+<p>koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。</p>
+<p><strong>文章基于</strong></p>
+<p>Koordinator版本： 1.0.0</p>
+<p>内核版本： Anolis-4.19.91-26.6</p>
+<span id="more"></span>
+
+<h3 id="两种关键机制"><a href="#两种关键机制" class="headerlink" title="两种关键机制"></a>两种关键机制</h3><ul>
+<li>QoS</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>QoS</th>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SYSTEM</td>
+<td>系统进程，资源受限</td>
+<td>对于 DaemonSets 等系统服务，虽然需要保证系统服务的延迟，但也需要限制节点上这些系统服务容器的资源使用，以确保其不占用过多的资源</td>
+</tr>
+<tr>
+<td>LSE(Latency Sensitive Exclusive)</td>
+<td>保留资源并组织同 QoS 的 pod 共享资源</td>
+<td>很少使用，常见于中间件类应用，一般在独立的资源池中使用 （不超卖）</td>
+</tr>
+<tr>
+<td>LSR(Latency Sensitive Reserved)</td>
+<td>预留资源以获得更好的确定性</td>
+<td>类似于社区的 Guaranteed，CPU 核被绑定 （不超卖）</td>
+</tr>
+<tr>
+<td>LS(Latency Sensitive)</td>
+<td>共享资源，对突发流量有更好的弹性</td>
+<td>微服务工作负载的典型QoS级别，实现更好的资源弹性和更灵活的资源调整能力</td>
+</tr>
+<tr>
+<td>BE(Best Effort)</td>
+<td>共享不包括 LSE 的资源，资源运行质量有限，甚至在极端情况下被杀死</td>
+<td>批量作业的典型 QoS 水平，在一定时期内稳定的计算吞吐量，低成本资源</td>
+</tr>
+</tbody></table>
+<ul>
+<li>优先级</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>PriorityClass</th>
+<th>优先级范围</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>koord-prod</td>
+<td>[9000, 9999]</td>
+<td>需要提前规划资源配额，并且保证在配额内成功。</td>
+</tr>
+<tr>
+<td>koord-mid</td>
+<td>[7000, 7099]</td>
+<td>需要提前规划资源配额，并且保证在配额内成功。</td>
+</tr>
+<tr>
+<td>koord-batch</td>
+<td>[5000, 5999]</td>
+<td>需要提前规划资源配额，一般允许借用配额。</td>
+</tr>
+<tr>
+<td>koord-free</td>
+<td>[3000, 3999]</td>
+<td>不保证资源配额，可分配的资源总量取决于集群的总闲置资源。</td>
+</tr>
+</tbody></table>
+<h3 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h3><p><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/architecture.png" alt="architecture"></p>
+<h3 id="调度能力"><a href="#调度能力" class="headerlink" title="调度能力"></a>调度能力</h3><h4 id="内核调度能力"><a href="#内核调度能力" class="headerlink" title="内核调度能力"></a>内核调度能力</h4><p><a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/155424.html">https://help.aliyun.com/document_detail/155424.html</a></p>
+<h4 id="单节点调度能力"><a href="#单节点调度能力" class="headerlink" title="单节点调度能力"></a>单节点调度能力</h4><h5 id="CPU-抑制"><a href="#CPU-抑制" class="headerlink" title="CPU 抑制"></a>CPU 抑制</h5><p>此特性适用于BE QoS的pod， 意思是只针对BE QoS的pod压缩CPU。</p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cpuSuppressPolicy</td>
+<td>支持cpuset和cpuQuota两种策略。cpuset策略对最终调整的是cgroup中的cpuset.cpus，cpuQuota测试最终调整的是cgroup中的cpu.cfs_quota_us。<br/>( <strong>这里可忽略：</strong> <em>当kubelet中cpu-manager-policy设置为static时，对于cpuset策略生效的是新计算的cpuset不和老的cpuset进行merge；</em> <em>当kubelet中的cpu-manager-policy不设置时， 对于cpuset策略生效的是新计算的cpuset和老的cpuset进行merge， 且为了避免cgroup上下级冲突，会做2次apply。</em> )<br/><strong>默认策略为：cpuset。</strong></td>
+<td>cpuset.cpus和cpu.cfs_quota_us<br/></td>
+<td>BE<br/></td>
+<td>Pod和Pod.Spec.Containers<br/></td>
+</tr>
+<tr>
+<td>cpuSuppressThresholdPercent</td>
+<td>用于计算BE的pods可以使用的cpu：<em>suppress(BE) :&#x3D; node.Status.Allocatable.Cpu()</em> cpuSuppressThresholdPercent - pod(LS).Used - system.Used*<br/>最终可用的cpu是与策略有关联： (这里可以理解为需要修正下上一步计算出来的值，让其尽量合理一点)* 当策略为cpuset时， 上一步计算出来的值还需要与LSR占用的cpu再做计算；* 当策略为cpuQuota时， 上一步计算出来的值还需要与node.Status.Capacity.Cpu()的上浮再做计算。<br/><strong>默认值为： 65。</strong></td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="CPU-Burst"><a href="#CPU-Burst" class="headerlink" title="CPU Burst"></a>CPU Burst</h5><p>此特性只适用于LS QoS的pod， 不适用于其他LSR、BE等QoS的pod。</p>
+<p><strong>CPU Burst和 CPU CFSQuota Burst策略在Koordinator中默认是不开启的。</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cpuBurstStrategy.cpuBurstPercent<br/></td>
+<td>对应的计算公式为： cpu.cfs_burst_us &#x3D; container.limit * burstCfg.CPUBurstPercent &#x2F; 100 * cfs_period_us。 即：cpu最多可以使用到几倍的cpu limits。<strong>注： 突发时最多可以使用多少cpu与平时空余的CPU资源有关， 具体可以看下面的参考文档。</strong><br/>启用策略参数为： auto或cpuBurstOnly<br/>参考文档：<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/306980.html">https://help.aliyun.com/document_detail/306980.html</a></td>
+<td>cpu.cfs_burst_us</td>
+<td>LS</td>
+<td>Pod和Pod.Spec.Containers</td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.policy</td>
+<td>支持的策略类型： none、cpuBurstOnly、cfsQuotaBurstOnly、auto<br/>默认值： none</td>
+<td>-</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.sharePoolThresholdPercent</td>
+<td>当LS QoS的pod的实际cpu使用率大于此参数时， 则认为Node目前处于overload状态； 如果是overload状态， 则会影响下面pod在burst时使用的cfs_quota_us值， 即当node处于高负载时， 需要降低cpu burst的使用， 每次以0.8的倍数降低cfs_quota_us的值；当LS QoS的pod的实际cpu使用率小于0.9 * 此参数值是， 则认为Node处于idle状态； 如果是idle状态，且允许cpu burst的使用，每次以1.2的倍数提升cfs_quota_us的值；node的负载还有其他2种： cooling和unknown， cooling位于overload和idele之间；unknown是状态未知， 比如metrics指标没有采集上来等。<br/>默认值：50</td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.cfsQuotaBurstPercent</td>
+<td>对应的计算公式为： cpu.cfs_quota_us &#x3D; container.limit * cfsQuotaBurstPercent &#x2F; 100。<br/>burst限制器的容量为： cfsQuotaBurstPeriodSeconds * (cfsQuotaBurstPercent - 100)。 实际上计算方式同cfs_burst_us的方式， 都是过去一段时间空余的CPU资源有关。<br/>启用策略参数为： auto或cfsQuotaBurstOnly<br/>默认值：300</td>
+<td>cpu.cfs_quota_us</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.cfsQuotaBurstPeriodSeconds</td>
+<td>指定pod在burst时可以使用的最长的时间。<br/>默认：-1 (无限制)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="Memory-CGroup特性"><a href="#Memory-CGroup特性" class="headerlink" title="Memory CGroup特性"></a>Memory CGroup特性</h5><table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>memoryQOS.wmarkRatio<br/></td>
+<td>该接口用于设置是否启用memcg后台异步回收功能，以及设置异步回收功能开始工作的memcg内存水位线。单位是相对于memcg limit的百分之几。取值范围：0~100* 默认值为0，该值也表示禁用memcg后台异步回收功能。* 取值为非0时，表示开启memcg后台异步回收功能并设置对应的水位线。<strong>推荐值: 95</strong><br/>memory.wmark_high &#x3D; memory.limit_in_bytes * memory.wmark_ratio &#x2F; 100)<strong>当memcg内存使用超过该接口的值时，后台异步回收功能启动</strong><br/>参考文档：<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169535.html">https://help.aliyun.com/document_detail/169535.html</a></td>
+<td>memory.wmark_ratio<br/></td>
+<td>LSR&#x2F;LS&#x2F;BE</td>
+<td>Pod和Pod.Spec.Containers<br/></td>
+</tr>
+<tr>
+<td>memoryQOS.wmarkScalePermill</td>
+<td>该接口用于控制memory.wmark_high和memory.wmark_low之间的间隔。单位是相对于memcg limit的万分之几。取值范围：1~1000* 该接口在创建时，会继承父组的值（该值为50），该值也是默认值，即memcg limit的千分之五。* memcg根组目录不存在该接口文件。<strong>推荐值: 20</strong><br/>memory.wmark_low &#x3D; memory.wmark_high - memory.limit_in_bytes * memory.wmark_scale_factor &#x2F; 10000<strong>当memcg内存使用低于该接口的值时，后台异步回收结束</strong><br/>参考文档：<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169535.html">https://help.aliyun.com/document_detail/169535.html</a></td>
+<td>memory.wmark_scale_factor</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.wmarkMinAdj</td>
+<td>表示基于全局最低水位线（global wmark_min）所作出的调整（adjustment）百分比。取值范围：-25 ~ 50，取值范围说明如下：* 该接口创建时，继承父组的值（值为0），即默认值为0。* 负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）* 负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）* 当偏移后的global wmark_min被触发后，会执行抑制操作，抑制操作的时间和超出的内存使用为线性比例关系。抑制时间的取值范围：1ms ~ 1000ms。<br/><strong>负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）；****负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）</strong><br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169537.html">https://help.aliyun.com/document_detail/169537.html</a><br/></td>
+<td>memory.wmark_min_adj</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.priorityEnable</td>
+<td>该接口用于设置是否启用memcg OOM优先级策略功能，取值为0或者1。该接口不会继承，默认值为0。* 取值为0时，表示禁用memcg OOM优先级策略功能。* 取值为1时，表示开启memcgOOM优先级策略功能。<br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/435534.html">https://help.aliyun.com/document_detail/435534.html</a></td>
+<td>memory.use_priority_oom</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.priority</td>
+<td>该接口提供13个级别的memcg优先级以支持不同重要程度的业务。取值范围为0~12，数值越大表示优先级越高。该接口不会继承，默认值为0。<em><strong>实现一定程度的内存QoS，此处需要说明的优先级值非全局变量，只能在同父cgroup下的兄弟节点进行比较。</strong></em> 对于优先级相等的兄弟节点来说，会按照组的内存使用量来排序选择内存使用最大的进行OOM操作。<br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/435534.html">https://help.aliyun.com/document_detail/435534.html</a></td>
+<td>memory.priority</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.oomKillGroup</td>
+<td>&lt;TODO: 还没找到说明文档&gt;</td>
+<td>memory.oom.group</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.minLimitPercent</td>
+<td>绝对锁定内存，即使系统没有可回收的内存，也不会回收该接口锁定的内存。<br/>memory.min &#x3D; resources.Requests.Memory() * minLimitPercent &#x2F; 100(BE的计算也是类似，取的requests值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.min</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.lowLimitPercent</td>
+<td>相对锁定内存，如果系统没有其他可回收的内存，该接口锁定的内存也会被回收一部分。<br/>memory.min &#x3D; resources.Requests.Memory() * lowLimitPercent &#x2F; 100(BE的计算也是类似，取的requests值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.low<br/></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.throttlingPercent</td>
+<td>限制memcg的内存使用。<br/>memory.high &#x3D; resources.Limits.Memory() * throttlingPercent &#x2F; 100(BE的计算也是类似，取的limits值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.high</td>
+<td>Pod.Spec.Container<br/></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="CPU-amp-Memory-Evict特性"><a href="#CPU-amp-Memory-Evict特性" class="headerlink" title="CPU&amp;Memory Evict特性"></a>CPU&amp;Memory Evict特性</h5><p>此特性适用于BE QoS的pod， 意思是只对BE QoS的pod进行驱逐。</p>
+<table>
+<thead>
+<tr>
+<th><strong>分类</strong></th>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CPU Evict</strong></td>
+<td>args.cpu-evict-cool-time-seconds</td>
+<td>cpu驱逐的冷却周期， 默认是20s.</td>
+<td>-</td>
+<td>BE</td>
+<td>Node</td>
+</tr>
+<tr>
+<td>cpuEvictTimeWindowSeconds</td>
+<td>查询BE类Pod的cpu利用率的时间段。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuEvictBESatisfactionLowerPercent</td>
+<td>计算公式为：BE类Pod的 CPURealLimit&#x2F;CPURequest。根据上述公式计算出来的cpu百分比高于这个值， 则不发生pod的驱逐动作。<br/>合法值为：(0-60]</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuEvictBESatisfactionUpperPercent</td>
+<td>计算公式为： cpuEvictBESatisfactionUpperPercent - 上个表格中计算出来的cpu比率。<br/>合法值为：(0-100]</td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Memory Evict</strong></td>
+<td>args.memory-evict-cool-time-seconds</td>
+<td>memory驱逐的冷却周期， 默认为4s.</td>
+<td>-</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryEvictThresholdPercent<br/></td>
+<td>内存驱逐阈值百分比。 计算是否超过这个阈值： A&#x3D;MemoryUsed(不包含cache)&#x2F; node memoryCapacity，当超过这个阈值后， 需要释放的内存为： node memoryCapacity * (A - memoryEvictLowerPercent)  &#x2F; 100<br/>默认值为： 70。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryEvictLowerPercent</td>
+<td>内存占用(不包含cache)的安全线百分比。<br/>默认值为： memoryEvictThresholdPercent - 2 &#x3D; 68。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="通用调度能力"><a href="#通用调度能力" class="headerlink" title="通用调度能力"></a>通用调度能力</h5><p>此调度策略只适用于LSE、LSR并且priorityClass为koord-prod并且是Guaranted的pod(cpu和memory也必须是整数)。 Pod中的所有container也都需要是Guaranted的。<br><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/schedule.png" alt="architecture"></p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>args.node-topology-sync-interval</td>
+<td>koordlet上报node topology的间隔。</td>
+<td>3s</td>
+</tr>
+<tr>
+<td>scheduling.koordinator.sh&#x2F;resource-spec</td>
+<td>位于pod的annotations中，支持preferredCPUBindPolicy、preferredCPUExclusivePolicy策略。其中preferredCPUBindPolicy可以设置的值有：* Default (默认策略)* FullPCPUs，申请的cpu分配到同一个物理核上<em><em>SpreadByPCPUs</em> ，申请的cpu分配到不同物理核上，即打散到不同的核上</em><em>ConstrainedBurst</em> ，其中preferredCPUExclusivePolicy可以设置的值有：* None， 没有排他策略* PCPULevel， 同一个物理核互斥(pod间)* NUMANodeLevel，同一个NUMA Node互斥(pod间)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>scoringStrategy</td>
+<td>位于scheduler config中，可以设置的值有：* MostAllocated (默认)，打分逻辑为： (requestCPUs * 100) &#x2F; freeCPUs<strong>BalancedAllocation</strong> LeastAllocated，打分逻辑为：(freeCPUs - requestCPUs) * 100 &#x2F; freeCPUs最终的分数会在这个区间： [0, 32.23]</td>
+<td>-</td>
+</tr>
+<tr>
+<td>node.koordinator.sh&#x2F;cpu-bind-policy</td>
+<td>位于node的labels中， 可以设置的值有：* FullPCPUsOnly， 需要pod申请的cpu核数%(一个物理核有多少个逻辑核)&#x3D;&#x3D;0并且pod的bind策略需要为FullPCPUs。 当kubelet的cpu option策略为full-pcpus-only时，也需要满足前面的条件。</td>
+<td>-</td>
+</tr>
+<tr>
+<td>node.koordinator.sh&#x2F;numa-allocate-strategy</td>
+<td>位于node的labels中，可以设置的值有：* MostAllocated(默认)，* LeastAllocated*<em>DistributeEvenly</em><br/><strong>注，也可以在scheduler config中设置打分类型(限MostAllocated和LeastAllocated)，node label上的优先级更高</strong></td>
+<td>-</td>
+</tr>
+</tbody></table>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><h3 id="实验描述"><a href="#实验描述" class="headerlink" title="实验描述"></a>实验描述</h3><p>将在线业务和离线业务混部在同一台node上，通过在线业务90指标，来量化混部效果，比较普通混部、Koordinator混部和Koordinator混部绑核策略在单节点离线利用率逐步增加情况下的性能表现。</p>
+<ul>
+<li>普通混部：混跑在线和离线，使用当前生产环境一样配置的节点</li>
+<li>Koordinator混部：混跑在线和离线，离线BE</li>
+<li>Koordinator混部绑核：混跑在线和离线，在线启用CPU绑核，离线BE</li>
+</ul>
+<p>在线业务压测命令<br><code>wrk -t16 -c50 -d180s --latency &quot;http://10.215.113.57:8080/calculate&quot;</code></p>
+<p><strong>以下所有实验内容均是社区默认配置，除cpu的绑核策略</strong></p>
+<h3 id="模拟应用"><a href="#模拟应用" class="headerlink" title="模拟应用"></a>模拟应用</h3><h4 id="在线业务"><a href="#在线业务" class="headerlink" title="在线业务"></a>在线业务</h4><p>8c16g  go 1.17</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">qa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">progressDeadlineSeconds:</span> <span class="number">600</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">revisionHistoryLimit:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">rollingUpdate:</span></span><br><span class="line">      <span class="attr">maxSurge:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line">      <span class="attr">maxUnavailable:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">online-service-mock</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">leason001/online-mock:v1.0.0</span></span><br><span class="line">        <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">online-service</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">&quot;8&quot;</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">16000Mi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">&quot;8&quot;</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">16000Mi</span></span><br><span class="line">        <span class="attr">terminationMessagePath:</span> <span class="string">/dev/termination-log</span></span><br><span class="line">        <span class="attr">terminationMessagePolicy:</span> <span class="string">File</span></span><br><span class="line">      <span class="attr">dnsPolicy:</span> <span class="string">ClusterFirst</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">koordinator:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Always</span></span><br><span class="line">      <span class="attr">securityContext:</span> &#123;&#125;</span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="离线业务"><a href="#离线业务" class="headerlink" title="离线业务"></a>离线业务</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line">        <span class="attr">colocation-profile-job:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">        <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">koordinator:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">harbor.qima-inc.com/lisen/bigdata-test7</span></span><br><span class="line">        <span class="attr">args:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">--maxConcurrency=20</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">--maxFile=20</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">2000m</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">&quot;4000Mi&quot;</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">500m</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">&quot;500Mi&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><p>Koordinator版本： 1.0.0<br>kubernetes：v1.21.7<br>Node 节点 48c 可分配cpu 47c</p>
+<h4 id="混部配置"><a href="#混部配置" class="headerlink" title="混部配置"></a>混部配置</h4><h5 id="Job（BE-koord-batch）"><a href="#Job（BE-koord-batch）" class="headerlink" title="Job（BE + koord-batch）"></a>Job（BE + koord-batch）</h5><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-job</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-job:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">BE</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-batch</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">5000</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="L1Web-（LSR-koord-prod）"><a href="#L1Web-（LSR-koord-prod）" class="headerlink" title="L1Web （LSR + koord-prod）"></a>L1Web （LSR + koord-prod）</h5><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-l1web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-l1web:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">LSR</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-prod</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">9100</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">    <span class="attr">scheduling.koordinator.sh/resource-spec:</span> <span class="string">&#x27;&#123;&quot;preferredCPUBindPolicy&quot;: &quot;SpreadByPCPUs&quot;&#125;&#x27;</span>  <span class="comment"># 根据node特性选择绑核策略 SpreadByPCPUs</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="L2L3Web-（LS-koord-mid）"><a href="#L2L3Web-（LS-koord-mid）" class="headerlink" title="L2L3Web （LS + koord-mid）"></a>L2L3Web （LS + koord-mid）</h5><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-l2l3web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-l2l3web:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">LS</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-mid</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">7010</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="实验数据"><a href="#实验数据" class="headerlink" title="实验数据"></a>实验数据</h3><table>
+<thead>
+<tr>
+<th>混部类型&#x2F;离线c</th>
+<th>30c</th>
+<th>20c</th>
+<th>10c</th>
+<th>4c</th>
+<th>0c</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通混部</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   550.15ms  271.17ms   1.93s    69.42%Req&#x2F;Sec     6.66      4.28    30.00     84.42%Latency Distribution50%  510.34ms75%  703.47ms90%  917.68ms99%    1.35s15862 requests in 3.00m, 2.07MB readSocket errors: connect 0, read 0, write 0, timeout 3Requests&#x2F;sec:     88.08Transfer&#x2F;sec:     11.78KB</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   327.40ms  159.32ms   1.46s    70.45%Req&#x2F;Sec    10.17      5.40    40.00     63.90%Latency Distribution50%  299.65ms75%  415.49ms90%  539.98ms99%  821.18ms26711 requests in 3.00m, 3.49MB readRequests&#x2F;sec:    148.31Transfer&#x2F;sec:     19.84KB</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   226.89ms  110.28ms   1.08s    70.81%Req&#x2F;Sec    13.99      6.77    40.00     85.58%Latency Distribution50%  205.64ms75%  286.30ms90%  374.23ms99%  569.52ms38593 requests in 3.00m, 5.04MB readRequests&#x2F;sec:    214.29Transfer&#x2F;sec:     28.67KB</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   184.88ms   87.04ms 776.84ms   71.34%Req&#x2F;Sec    16.82      7.66    50.00     64.93%Latency Distribution50%  167.91ms75%  230.62ms90%  300.64ms99%  458.58ms47324 requests in 3.00m, 6.18MB readRequests&#x2F;sec:    262.76Transfer&#x2F;sec:     35.15K</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.55:8080/calculate16">http://10.215.113.55:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   178.73ms   83.51ms 879.17ms   70.78%Req&#x2F;Sec    17.31      7.72    50.00     64.96%Latency Distribution50%  162.46ms75%  222.69ms90%  291.30ms99%  438.10ms48909 requests in 3.00m, 6.39MB readRequests&#x2F;sec:    271.58Transfer&#x2F;sec:     36.33KB</td>
+</tr>
+<tr>
+<td>koordinator混部<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   214.49ms  119.05ms   1.99s    78.36%Req&#x2F;Sec    14.74      7.13    50.00     84.39%Latency Distribution50%  191.36ms75%  267.01ms90%  353.57ms99%  564.37ms40763 requests in 3.00m, 5.33MB readSocket errors: connect 0, read 0, write 0, timeout 40Requests&#x2F;sec:    226.39Transfer&#x2F;sec:     30.29KB<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   208.99ms  113.97ms   1.77s    77.09%Req&#x2F;Sec    15.14      7.25    50.00     84.29%Latency Distribution50%  186.23ms75%  260.93ms90%  346.60ms99%  566.10ms42035 requests in 3.00m, 5.49MB readSocket errors: connect 0, read 0, write 0, timeout 29Requests&#x2F;sec:    233.44Transfer&#x2F;sec:     31.23KB<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   194.99ms  111.34ms   1.98s    82.42%Req&#x2F;Sec    16.17      7.48    50.00     83.00%Latency Distribution50%  173.24ms75%  239.56ms90%  315.61ms99%  518.29ms45274 requests in 3.00m, 5.92MB readSocket errors: connect 0, read 0, write 0, timeout 25Requests&#x2F;sec:    251.40Transfer&#x2F;sec:     33.63KB<br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   180.80ms   94.63ms   2.00s    78.18%Req&#x2F;Sec    17.21      7.80    50.00     63.62%Latency Distribution50%  162.15ms75%  223.27ms90%  293.00ms99%  461.81ms48506 requests in 3.00m, 6.34MB readSocket errors: connect 0, read 0, write 0, timeout 23Requests&#x2F;sec:    269.31Transfer&#x2F;sec:     36.03KB<br/><br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   177.73ms   97.08ms   1.92s    82.06%Req&#x2F;Sec    17.55      7.78    50.00     64.91%Latency Distribution50%  159.45ms75%  216.63ms90%  283.87ms99%  459.59ms49562 requests in 3.00m, 6.48MB readSocket errors: connect 0, read 0, write 0, timeout 21Requests&#x2F;sec:    275.21Transfer&#x2F;sec:     36.82KB<br/></td>
+</tr>
+<tr>
+<td>koordinato绑核混部（FullPCPUs）<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   334.07ms  193.41ms   1.95s    70.73%Req&#x2F;Sec    10.23      5.68    40.00     60.90%Latency Distribution50%  296.62ms75%  435.18ms90%  587.64ms99%  947.87ms26279 requests in 3.00m, 3.43MB readSocket errors: connect 0, read 0, write 0, timeout 44Requests&#x2F;sec:    145.91Transfer&#x2F;sec:     19.52KB<br/><br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   324.44ms  180.21ms   1.94s    70.08%Req&#x2F;Sec    10.45      5.76    40.00     61.67%Latency Distribution50%  290.98ms75%  420.13ms90%  560.88ms99%  886.12ms27007 requests in 3.00m, 3.53MB readSocket errors: connect 0, read 0, write 0, timeout 30Requests&#x2F;sec:    149.95Transfer&#x2F;sec:     20.06KB<br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   304.60ms  168.88ms   1.87s    69.71%Req&#x2F;Sec    11.06      5.97    40.00     59.44%Latency Distribution50%  272.04ms75%  395.56ms90%  530.16ms99%  825.95ms28942 requests in 3.00m, 3.78MB readSocket errors: connect 0, read 0, write 0, timeout 12Requests&#x2F;sec:    160.71Transfer&#x2F;sec:     21.50KB<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   300.00ms  168.00ms   1.95s    69.55%Req&#x2F;Sec    11.23      6.04    40.00     59.29%Latency Distribution50%  267.87ms75%  390.71ms90%  525.82ms99%  823.77ms29441 requests in 3.00m, 3.85MB readSocket errors: connect 0, read 0, write 0, timeout 6Requests&#x2F;sec:    163.48Transfer&#x2F;sec:     21.87KB<br/><br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   297.46ms  168.29ms   2.00s    70.14%Req&#x2F;Sec    11.31      6.12    40.00     59.13%Latency Distribution50%  265.11ms75%  386.61ms90%  520.25ms99%  818.87ms29682 requests in 3.00m, 3.88MB readSocket errors: connect 0, read 0, write 0, timeout 13Requests&#x2F;sec:    164.84Transfer&#x2F;sec:     22.05KB<br/><br/></td>
+</tr>
+<tr>
+<td>koordinato绑核混部（SpreadByPCPUs）<br/></td>
+<td><br/>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   194.52ms  114.30ms   1.95s    81.00%Req&#x2F;Sec    15.72      7.50    50.00     83.11%Latency Distribution50%  171.13ms75%  243.02ms90%  323.14ms99%  531.73ms43860 requests in 3.00m, 5.73MB readSocket errors: connect 0, read 0, write 0, timeout 100Requests&#x2F;sec:    243.53Transfer&#x2F;sec:     32.58KB<br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   191.38ms  109.22ms   2.00s    79.18%Req&#x2F;Sec    16.01      7.51    50.00     83.32%Latency Distribution50%  170.16ms75%  239.36ms90%  316.34ms99%  512.58ms44693 requests in 3.00m, 5.84MB readSocket errors: connect 0, read 0, write 0, timeout 96Requests&#x2F;sec:    248.16Transfer&#x2F;sec:     33.20KB<br/><br/></td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   188.50ms  104.60ms   1.87s    77.21%Req&#x2F;Sec    16.37      7.68    50.00     82.00%Latency Distribution50%  168.07ms75%  235.71ms90%  311.15ms99%  503.77ms45843 requests in 3.00m, 5.99MB readSocket errors: connect 0, read 0, write 0, timeout 64Requests&#x2F;sec:    254.55Transfer&#x2F;sec:     34.06KB</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   178.62ms   97.61ms   1.95s    77.72%Req&#x2F;Sec    17.34      7.86    50.00     64.61%Latency Distribution50%  160.77ms75%  222.73ms90%  290.30ms99%  461.97ms48916 requests in 3.00m, 6.39MB readSocket errors: connect 0, read 0, write 0, timeout 39Requests&#x2F;sec:    271.60Transfer&#x2F;sec:     36.34KB</td>
+<td>Running 3m test @ <a target="_blank" rel="noopener" href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   180.97ms  116.46ms   1.95s    87.90%Req&#x2F;Sec    17.45      7.98    60.00     63.67%Latency Distribution50%  158.60ms75%  222.45ms90%  296.19ms99%  514.42ms49165 requests in 3.00m, 6.42MB readSocket errors: connect 0, read 0, write 0, timeout 37Requests&#x2F;sec:    273.00Transfer&#x2F;sec:     36.53KB</td>
+</tr>
+</tbody></table>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/result.png" alt="architecture"></p>
+<ol>
+<li>普通混部在线业务的RT随着cpu使用率的上涨明显升高</li>
+<li>koordinator混部在线业务的RT随着cpu使用率的上涨有一点点升高单，单基本可控</li>
+<li>koordinator绑核混部在线业务的RT基本不受cpu使用率的上涨影响</li>
+<li>超线程机器的绑核策略打散物理核效果更好</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>赞赏一杯咖啡</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="leason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>leason
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html" title="koordinator混部系统">https://leason.top/Koordinator混部系统.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%BA%91%E5%8E%9F%E7%94%9F/" rel="tag"># 云原生</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/%E6%B7%B7%E9%83%A8/" rel="tag"># 混部</a>
+              <a href="/tags/koordinator/" rel="tag"># koordinator</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html" rel="prev" title="如何优雅的脚踏多朵云">
+      <i class="fa fa-chevron-left"></i> 如何优雅的脚踏多朵云
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html" rel="next" title="kubernetes负载感知调度">
+      kubernetes负载感知调度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%A4%E7%A7%8D%E5%85%B3%E9%94%AE%E6%9C%BA%E5%88%B6"><span class="nav-number">1.1.</span> <span class="nav-text">两种关键机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84%E5%9B%BE"><span class="nav-number">1.2.</span> <span class="nav-text">架构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E8%83%BD%E5%8A%9B"><span class="nav-number">1.3.</span> <span class="nav-text">调度能力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E8%B0%83%E5%BA%A6%E8%83%BD%E5%8A%9B"><span class="nav-number">1.3.1.</span> <span class="nav-text">内核调度能力</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E8%8A%82%E7%82%B9%E8%B0%83%E5%BA%A6%E8%83%BD%E5%8A%9B"><span class="nav-number">1.3.2.</span> <span class="nav-text">单节点调度能力</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU-%E6%8A%91%E5%88%B6"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">CPU 抑制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU-Burst"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">CPU Burst</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Memory-CGroup%E7%89%B9%E6%80%A7"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">Memory CGroup特性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU-amp-Memory-Evict%E7%89%B9%E6%80%A7"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">CPU&amp;Memory Evict特性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E8%B0%83%E5%BA%A6%E8%83%BD%E5%8A%9B"><span class="nav-number">1.3.2.5.</span> <span class="nav-text">通用调度能力</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">2.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.1.</span> <span class="nav-text">实验描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E5%BA%94%E7%94%A8"><span class="nav-number">2.2.</span> <span class="nav-text">模拟应用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E7%BA%BF%E4%B8%9A%E5%8A%A1"><span class="nav-number">2.2.1.</span> <span class="nav-text">在线业务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A6%BB%E7%BA%BF%E4%B8%9A%E5%8A%A1"><span class="nav-number">2.2.2.</span> <span class="nav-text">离线业务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">2.3.</span> <span class="nav-text">环境</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%B7%E9%83%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.1.</span> <span class="nav-text">混部配置</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Job%EF%BC%88BE-koord-batch%EF%BC%89"><span class="nav-number">2.3.1.1.</span> <span class="nav-text">Job（BE + koord-batch）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#L1Web-%EF%BC%88LSR-koord-prod%EF%BC%89"><span class="nav-number">2.3.1.2.</span> <span class="nav-text">L1Web （LSR + koord-prod）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#L2L3Web-%EF%BC%88LS-koord-mid%EF%BC%89"><span class="nav-number">2.3.1.3.</span> <span class="nav-text">L2L3Web （LS + koord-mid）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E6%95%B0%E6%8D%AE"><span class="nav-number">2.4.</span> <span class="nav-text">实验数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">2.5.</span> <span class="nav-text">结论</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="leason"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">leason</p>
+  <div class="site-description" itemprop="description">运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leason00" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leason00" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2395491531@qq.com" title="E-Mail → mailto:2395491531@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/images/wechat.png" title="WeChat → &#x2F;images&#x2F;wechat.png"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+
+
+      </div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leason</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '972ae4a1b3613217a544',
+      clientSecret: 'ccebe5ee6207db60d90d5c11a7b43b98cdca188b',
+      repo        : 'leason00.github.io',
+      owner       : 'leason00',
+      admin       : ['leason00'],
+      id          : 'cf6c515c3f611a13964ea964ce1c6439',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941" crossorigin="anonymous"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpeg">
+  <link rel="mask-icon" href="/images/avatar.jpeg" color="#222">
+  <meta name="google-site-verification" content="EKetkcQ0dzMReT-fhICBCc1eBTh3FLcFgh6gLTmp6pw">
+  <meta name="baidu-site-verification" content="codeva-DU6BjsezSk">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="背景现在越来越多的企业会选择将自己的业务上云，一方面是因为云厂商越来越稳定完善，上云可以获得更稳定省心的IaaS层，另一方面是相比较于自建，可以节省成本。如果企业追求更极致的SLA，往往会更近一步，选择多云，毕竟鸡蛋放两个篮子里可以更安全些。 好处当然是显然易见，但是问题也随之而来 多云带来的问题多云会带来很多问题，比如多云之间的网络专线费用，多云之间的流量隔离（故障容灾），以及他们之前不通的技术">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何优雅的脚踏多朵云">
+<meta property="og:url" content="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html">
+<meta property="og:site_name" content="Leason">
+<meta property="og:description" content="背景现在越来越多的企业会选择将自己的业务上云，一方面是因为云厂商越来越稳定完善，上云可以获得更稳定省心的IaaS层，另一方面是相比较于自建，可以节省成本。如果企业追求更极致的SLA，往往会更近一步，选择多云，毕竟鸡蛋放两个篮子里可以更安全些。 好处当然是显然易见，但是问题也随之而来 多云带来的问题多云会带来很多问题，比如多云之间的网络专线费用，多云之间的流量隔离（故障容灾），以及他们之前不通的技术">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/architecture.png">
+<meta property="og:image" content="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/result.png">
+<meta property="article:published_time" content="2022-12-16T03:53:27.000Z">
+<meta property="article:modified_time" content="2025-01-09T07:42:54.463Z">
+<meta property="article:author" content="leason">
+<meta property="article:tag" content="云原生">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="运维自动化">
+<meta property="article:tag" content="Terraform">
+<meta property="article:tag" content="多云">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/architecture.png">
+
+<link rel="canonical" href="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>如何优雅的脚踏多朵云 | Leason</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e616a81d6078fbbb42d683fb72a3ce3f";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Leason</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">腹有诗书气自华</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="leason">
+      <meta itemprop="description" content="运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Leason">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          如何优雅的脚踏多朵云
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-12-16 11:53:27" itemprop="dateCreated datePublished" datetime="2022-12-16T11:53:27+08:00">2022-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-09 15:42:54" itemprop="dateModified" datetime="2025-01-09T15:42:54+08:00">2025-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Terraform/" itemprop="url" rel="index"><span itemprop="name">Terraform</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+      
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="6313778550"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>现在越来越多的企业会选择将自己的业务上云，一方面是因为云厂商越来越稳定完善，上云可以获得更稳定省心的IaaS层，另一方面是相比较于自建，可以节省成本。如果企业追求更极致的SLA，往往会更近一步，选择多云，毕竟鸡蛋放两个篮子里可以更安全些。</p>
+<p>好处当然是显然易见，但是问题也随之而来</p>
+<h3 id="多云带来的问题"><a href="#多云带来的问题" class="headerlink" title="多云带来的问题"></a>多云带来的问题</h3><p>多云会带来很多问题，比如多云之间的网络专线费用，多云之间的流量隔离（故障容灾），以及他们之前不通的技术栈所带来的运维层面的屏蔽。我们这里着重谈论多云带来的云资源交付的问题：</p>
+<ol>
+<li>资源交付自动化的过程中需要对接多云的文档或者SDK，体力活，并且会有持续的增量开发</li>
+<li>产品层面建模屏蔽云厂商的差异，用户不需要感知云厂商，也不应该感知云厂商的存在，因为IaaS层应该可以随时从一个云迁移到另外一个云，只有具备这种能力，才具备与云厂商的议价权（企业用户折扣真的可以很大）</li>
+<li>每个云上都有产品，难道我们真的要每个产品都对应去建模，如果不建模该怎么办</li>
+<li>容器化大潮，如何相对统一的交付资源</li>
+</ol>
+<span id="more"></span>
+<h3 id="方案设计"><a href="#方案设计" class="headerlink" title="方案设计"></a>方案设计</h3><p><img src="/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/architecture.png" alt="architecture"></p>
+<p>通过抽象定义云资源模型，定义云资源模板，由自定义云资源CRD operator 将InstanceType中的tf模板填充，最终通过Terraform交付云资源。<br>在这个过程中，自定义云资源CRD operator需要做一定的概念转化工作，即把自己定义通用的模型转化为不同云厂商的模型， 因为tf模板定义了相同的输入输出，<br>所以自定义云资源CRD operator的代码是通用的，不需要对每个云做适配，只需要对自己的通用模型做一次适配就好（通用模型填充TF模板）。</p>
+<h4 id="TerraformController"><a href="#TerraformController" class="headerlink" title="TerraformController"></a>TerraformController</h4><p>使用 Terraform 去解决对接多云的麻烦，并且 Terraform 还具有让不同云厂商的资源描述输入和输出相对统一，但是Terraform本身是个Cli工具，所有可以用一个<br>开箱即用的开源程序<a target="_blank" rel="noopener" href="https://github.com/kubevela/terraform-controller">TerraformController</a>去让它完美的云原生化</p>
+<p>该开源软件主要优势：</p>
+<ol>
+<li>具有 Terraform 完全能力，多云拓展方便</li>
+<li>Terraform 资源使用 kubernetes 接管，不需要再去关心Terraform的部署存储<a href="/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5.html" title="点击这里查看这篇文章">点击这里查看这篇文章</a></li>
+<li>统一资源为 configuration CRD</li>
+</ol>
+<h4 id="自定义云资源-K8s-CRD"><a href="#自定义云资源-K8s-CRD" class="headerlink" title="自定义云资源 K8s CRD"></a>自定义云资源 K8s CRD</h4><p>使用 K8s CRD 去定义自己的云资源，一套控制程序交付所有云资源</p>
+<p>例子：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CloudResource</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">env:</span> <span class="string">qa</span></span><br><span class="line">    <span class="attr">idc:</span> <span class="string">qabb</span></span><br><span class="line">    <span class="attr">instance_name:</span> <span class="string">qabb-qa-test1</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">qabb-4a1fe56c-1a56-42f9-97ff-2ca779395861</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">components:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">idc:</span> <span class="string">qabb</span></span><br><span class="line">    <span class="attr">instance_name:</span> <span class="string">qabb-qa-test1</span></span><br><span class="line">    <span class="attr">instance_spec:</span> <span class="string">1c4g</span></span><br><span class="line">    <span class="attr">instance_type:</span> <span class="string">9b977623-d9e1-4a74-a667-2c68121593f1</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">cvm</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">data_disks:</span></span><br><span class="line">        <span class="attr">data_disk_287765:</span></span><br><span class="line">          <span class="attr">disk_type:</span> <span class="string">LOCAL_SSD</span></span><br><span class="line">          <span class="attr">size:</span> <span class="number">100</span></span><br><span class="line">      <span class="attr">image_id:</span> <span class="string">uimage-zxr3dye4</span></span><br><span class="line">      <span class="attr">os_type:</span> <span class="string">centos7</span></span><br><span class="line">      <span class="attr">sys_disk_size:</span> <span class="number">20</span></span><br><span class="line">      <span class="attr">sys_disk_type:</span> <span class="string">LOCAL_SSD</span></span><br><span class="line">    <span class="attr">sub_zone:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>idc： 机房，按照业务划分的逻辑机房，很多配置都会绑定此概念，比如vpc网段，机型，镜像等等</li>
+<li>instance_name： 实例名称</li>
+<li>instance_type： 实例类型，映射到云厂商的资源类型，后面又详细介绍</li>
+<li>instance_spec： 实例规格，映射到云厂商的实例的规格，后面又详细介绍</li>
+<li>name：组件名称</li>
+<li>sub_zone：子域，网络层面机房内划分的区域，可以对应一段子网</li>
+<li>type：组件类型</li>
+<li>properties： 一些非结构化动态参数</li>
+</ol>
+<p>以上就是通用云资源模型的定义，基本可以满足常用云资源的定义。</p>
+<h4 id="资源类型"><a href="#资源类型" class="headerlink" title="资源类型"></a>资源类型</h4><p>定义不同的云资源类型来应对不同的云厂商的不同的云资源</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">InstanceType</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">cloud:</span> <span class="string">ucloud</span></span><br><span class="line">    <span class="attr">disabled:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">definition:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">idc:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">idc1</span>  <span class="comment"># 运行使用此机型的机房</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">idc2</span></span><br><span class="line">  <span class="attr">instance_spec:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">cpu_num:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">    <span class="attr">mem_size:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">1c1g</span></span><br><span class="line">    <span class="attr">spec:</span> <span class="string">n-highcpu-1</span>  <span class="comment"># 一般对应值不用云厂商的规格描述，这也是一种屏蔽多云差异的手段</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">cvm</span></span><br></pre></td></tr></table></figure>
+
+<p>云资源模板<br>大多数情况下一种云的一种资源（比如云主机）定义一种模板就行了，但是由于一种云的一种资源可能有很多种机型，比如ucloud有N、O、OS等，所以抽象InstanceTypeDefinition复用</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">InstanceTypeDefinition</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">cloud:</span> <span class="string">ucloud</span></span><br><span class="line">    <span class="attr">disabled:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">definition:</span> <span class="string">|-</span></span><br><span class="line"><span class="string">    terraform &#123;</span></span><br><span class="line"><span class="string">      required_providers &#123;</span></span><br><span class="line"><span class="string">        ucloud = &#123;</span></span><br><span class="line"><span class="string">          source = &quot;ucloud/ucloud&quot;</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">      &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    provider &quot;ucloud&quot; &#123;</span></span><br><span class="line"><span class="string">      base_url = &quot;http://api.service.ucloud.cn&quot;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_instance&quot; &quot;basic&quot; &#123;</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      image_id          = var.image_id</span></span><br><span class="line"><span class="string">      instance_type     = var.spec</span></span><br><span class="line"><span class="string">      root_password     = &quot;xxxx&quot;</span></span><br><span class="line"><span class="string">      name              = var.instance_name</span></span><br><span class="line"><span class="string">      charge_type = &quot;month&quot;</span></span><br><span class="line"><span class="string">      boot_disk_type    = var.sys_disk_type</span></span><br><span class="line"><span class="string">      boot_disk_size    = var.sys_disk_size</span></span><br><span class="line"><span class="string">      min_cpu_platform = &quot;Intel/Skylake&quot;</span></span><br><span class="line"><span class="string">      vpc_id = var.vpc_id</span></span><br><span class="line"><span class="string">      subnet_id = var.subnet_id</span></span><br><span class="line"><span class="string">      security_group = length(var.security_groups) &gt; 0 ? var.security_groups[0] : null</span></span><br><span class="line"><span class="string">      allow_stopping_for_update = true</span></span><br><span class="line"><span class="string">      delete_disks_with_instance = true</span></span><br><span class="line"><span class="string">      delete_eips_with_instance = true</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_disk&quot; &quot;storage&quot; &#123;</span></span><br><span class="line"><span class="string">      for_each          = var.data_disks</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      name              = each.key</span></span><br><span class="line"><span class="string">      disk_size         = each.value.size</span></span><br><span class="line"><span class="string">      disk_type          = each.value.disk_type</span></span><br><span class="line"><span class="string">      rdma_cluster_id = each.value.disk_type == &quot;rssd_data_disk&quot; ? ucloud_instance.basic.rdma_cluster_id : null</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_disk_attachment&quot; &quot;default&quot; &#123;</span></span><br><span class="line"><span class="string">      count       = length(ucloud_disk.storage)</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      disk_id  = element(values(ucloud_disk.storage)[*].id, count.index)</span></span><br><span class="line"><span class="string">      instance_id = ucloud_instance.basic.id</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;zone&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;ap-beijing-7&quot;</span></span><br><span class="line"><span class="string">      description = &quot;Availability Zone&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;instance_name&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;test_instance_name&quot;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Name&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;image_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Image Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;project_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;project Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;spec&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance spec&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;vpc_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Vpc Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;subnet_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Subnet Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;security_groups&quot; &#123;</span></span><br><span class="line"><span class="string">      type        = list(string)</span></span><br><span class="line"><span class="string">      description = &quot;Instance Security Groups&quot;</span></span><br><span class="line"><span class="string">      default     = []</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;sys_disk_type&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;CLOUD_PREMIUM&quot;</span></span><br><span class="line"><span class="string">      description = &quot;sys disk type&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;sys_disk_size&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = 20</span></span><br><span class="line"><span class="string">      description = &quot;sys disk size&quot;</span></span><br><span class="line"><span class="string">      type        = number</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;data_disks&quot; &#123;</span></span><br><span class="line"><span class="string">      type = map(object(&#123;</span></span><br><span class="line"><span class="string">        disk_type = string</span></span><br><span class="line"><span class="string">        size      = number</span></span><br><span class="line"><span class="string">      &#125;))</span></span><br><span class="line"><span class="string">      description = &quot;Instance Data Disks&quot;</span></span><br><span class="line"><span class="string">      default     = &#123;&#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;instance_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance ID&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.id</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;instance_ip&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Ip&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.private_ip</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;status&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Status&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.status</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk id&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.id if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_size&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk size&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.size if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_type&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk type&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.type if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;data_disks&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Data Disks&quot;</span></span><br><span class="line"><span class="string">      value       = [for key, value in ucloud_disk.storage : &#123; &quot;$&#123;key&#125;&quot;: &#123;&quot;sn&quot;: value.id, &quot;disk_type&quot;: value.disk_type, &quot;size&quot;: value.disk_size&#125; &#125;]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>效果</p>
+<p><img src="/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/result.png" alt="img.png"></p>
+<ol>
+<li>对资源的控制非常简单，操作CR记录就可以达到效果，像机器的创建、销毁、扩容简直不要太简单，并且不用关心底层是什么云</li>
+<li>新资源的接入变成写写一份TF模板，除非非常不典型的资源需要少量开发</li>
+<li>接入新的云厂商也是手到擒来，毕竟在TerraformController里大的云厂商都对接好了，只需要编写新的TF模板和把对应云厂商的Provider打到Terraform镜像就行了<a target="_blank" rel="noopener" href="https://github.com/oam-dev/docker-terraform">docker-terraform</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>赞赏一杯咖啡</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="leason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>leason
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://leason.top/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html" title="如何优雅的脚踏多朵云">https://leason.top/如何优雅的脚踏多朵云.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%BA%91%E5%8E%9F%E7%94%9F/" rel="tag"># 云原生</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/%E8%BF%90%E7%BB%B4%E8%87%AA%E5%8A%A8%E5%8C%96/" rel="tag"># 运维自动化</a>
+              <a href="/tags/Terraform/" rel="tag"># Terraform</a>
+              <a href="/tags/%E5%A4%9A%E4%BA%91/" rel="tag"># 多云</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5.html" rel="prev" title="Terraform管理云资源实践">
+      <i class="fa fa-chevron-left"></i> Terraform管理云资源实践
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html" rel="next" title="koordinator混部系统">
+      koordinator混部系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E4%BA%91%E5%B8%A6%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">多云带来的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.</span> <span class="nav-text">方案设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TerraformController"><span class="nav-number">3.1.</span> <span class="nav-text">TerraformController</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E4%BA%91%E8%B5%84%E6%BA%90-K8s-CRD"><span class="nav-number">3.2.</span> <span class="nav-text">自定义云资源 K8s CRD</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.3.</span> <span class="nav-text">资源类型</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="leason"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">leason</p>
+  <div class="site-description" itemprop="description">运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leason00" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leason00" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2395491531@qq.com" title="E-Mail → mailto:2395491531@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/images/wechat.png" title="WeChat → &#x2F;images&#x2F;wechat.png"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+
+
+      </div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leason</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '972ae4a1b3613217a544',
+      clientSecret: 'ccebe5ee6207db60d90d5c11a7b43b98cdca188b',
+      repo        : 'leason00.github.io',
+      owner       : 'leason00',
+      admin       : ['leason00'],
+      id          : '8ef5e44550b43fb36c95d0aeffbef2b9',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

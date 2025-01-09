@@ -1,0 +1,1122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>JetBrains 远程开发的使用</title>
+    <url>/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8.html</url>
+    <content><![CDATA[<h3 id="简单原理"><a href="#简单原理" class="headerlink" title="简单原理"></a>简单原理</h3><p><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img.png" alt="架构图"></p>
+<p>Gateway 会在本地安装一个轻量的客户端，以及在 server 端安装远程后台 IDE。</p>
+<ul>
+<li>本地客户端负责提供 UI 界面，它的操作跟基于 Intellij 的完整IDE一样，有同样的编辑器，能进行代码补全、导航、检查、重构等操作，就像本地 IDE 一样，但所有的这些代码都是保存在 server 端的，实际操作也是运行在 server 端的。</li>
+<li>远程后台 IDE，负责托管远端的代码，所有处理都会在 server 端完成，例如执行脚本、调试。</li>
+</ul>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ol>
+<li><p>需要先购买&#x2F;激活 JetBrains 的软件，任意一个Idea或者JetBrains Gateway</p>
+</li>
+<li><p>需要一台高性能 server，支持 ssh 远程登录</p>
+<h4 id="JetBrains软件"><a href="#JetBrains软件" class="headerlink" title="JetBrains软件"></a>JetBrains软件</h4><p><a href="http://e.tb.cn/h.T1NT5hBEX3Mvjuh?tk=E4BL3HiWp8a">如何高性价比激活JetBrains全家桶</a></p>
+</li>
+<li><p>idea版本需要大于2022.1 ，有SSH选项且相对比较稳定（建议直接使用2024.1以上，亲测好用），开启Remote Development Gateway插件（一般默认开启）<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/WX20250109-151710.png" alt="IDE使用"></p>
+<p><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_1.png" alt="安装插件"></p>
+</li>
+<li><p>远程开发专用客户端<a href="https://www.jetbrains.com/remote-development/gateway/">JetBrains Gateway</a><br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/WX20250109-151846.png" alt="远程开发专用客户端"></p>
+</li>
+</ol>
+<h4 id="高性能支持ssh远程登录的服务器"><a href="#高性能支持ssh远程登录的服务器" class="headerlink" title="高性能支持ssh远程登录的服务器"></a>高性能支持ssh远程登录的服务器</h4><p>有一台可以使用服务器提前加账号，把自己公钥放进去</p>
+<h3 id="开始远程开发"><a href="#开始远程开发" class="headerlink" title="开始远程开发"></a>开始远程开发</h3><p>新建一个连接，一开始没配置过远程ssh配置，需要下图右边进去配置<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_7.png" alt="新建ssh连接配置"></p>
+<p>ssh 配置，填ip地址用户名，选择私钥文件地址，最后测试下连接<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_3.png" alt="配置ssh连接"></p>
+<p>连接成功之后要选择IDEA类型和版本<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_4.png" alt="选择IDEA类型和版本"></p>
+<p>版本怎么选：</p>
+<ul>
+<li>EAP：（Early Access Program）版本则更接近于Beta阶段，但可能还包含一些Beta阶段不会有的新功能或改进（每隔30天会自动重新下载，着急打开代码的时候很急）</li>
+<li>Beta：公测版本</li>
+<li>RC：指可能成为最终产品的候选版本，如果未出现问题则可发布成为正式版本</li>
+</ul>
+<p>到服务器上clone你的代码然后选择对应的路径，”Download IDE and Connect”</p>
+<p>一些心得</p>
+<ol>
+<li><p>调整下堆大小<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_4.png" alt="调整下堆大小"></p>
+</li>
+<li><p>Port forward<br><img src="/JetBrains-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E7%9A%84%E4%BD%BF%E7%94%A8/img_5.png" alt="调整下堆大小"></p>
+</li>
+<li><p>插件装到host还是client，安装新版本client之后插件需要重新安装</p>
+</li>
+<li><p>免费的copilot，阿里通义灵码</p>
+</li>
+<li><p>JetBrains Toolbox 自动更新，清理缓存</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>JetBrains</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Kubernetes GPU 虚拟化方案</title>
+    <url>/Kubernetes-GPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%96%B9%E6%A1%88.html</url>
+    <content><![CDATA[<h3 id="主流架构"><a href="#主流架构" class="headerlink" title="主流架构"></a>主流架构</h3><p>Device Plugin：K8s制定设备插件接口规范，定义异构资源的上报和分配，设备厂商只需要实现相应的API接口，无需修改kubelet源码即可实现对其他硬件设备的支持。<br>Extended Resource：Scheduler可以根据Pod的创建删除计算资源可用量，而不再局限于CPU和内存的资源统计，进而将有特殊资源需求的Pod调度到相应的节点上。</p>
+<p>通过Device Plugin 异构资源调度流程如下：</p>
+<ol>
+<li>Device plugin 向kubelet上报当前节点资源情况</li>
+<li>用户通过yaml文件创建负载，定义Resource Request</li>
+<li>kube-scheduler根据从kubelet同步到的资源信息和Pod的资源请求，为Pod绑定合适的节点</li>
+<li>kubelet监听到绑定到当前节点的Pod，调用Device plugin的allocate接口为Pod分配设备</li>
+<li>kubelet启动Pod内的容器，将设备映射给容器<span id="more"></span></li>
+</ol>
+<p><img src="/Kubernetes-GPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%96%B9%E6%A1%88/img.png" alt="架构图"></p>
+<p>GPU虚拟化方案大致分为用户态隔离和内核态隔离：</p>
+<ol>
+<li>用户态主要是通过vcuda的方式，劫持cuda调用，比如下面介绍的两种开源</li>
+<li>内核态主要是用过虚拟gpu驱动的方式，比如腾讯云的qgpu和阿里云的cgpu，不过这两个都是闭源的</li>
+</ol>
+<h3 id="Nvidia-GPU"><a href="#Nvidia-GPU" class="headerlink" title="Nvidia-GPU"></a>Nvidia-GPU</h3><p>NVIDIA 提供的 Time-Slicing GPUs in Kubernetes 是一种通过 oversubscription(超额订阅) 来实现 GPU 共享的策略，有两种策略，单卡调度模式和超卖模式。<br>单卡的意思就是一个Pod调度一张GPU，当这个GPU有Pod使用了，就不可被其他Pod使用。</p>
+<p>超卖模式这种策略能让多个任务在同一个 GPU 上进行，而不是每个任务都独占一个 GPU。Time Slicing(时间片)指的是 GPU 本身的时间片调度。<br>也就是说假如有两个进程同时使用同一个GPU，两个进程同时把 CUDA 任务发射到 GPU 上去，GPU 并不会同时执行，而是采用时间片轮转调度的方式。<br>进程和进程间的显存和算力没有任何限制，谁抢到就是谁的。</p>
+<h3 id="腾讯GPU-manager"><a href="#腾讯GPU-manager" class="headerlink" title="腾讯GPU-manager"></a>腾讯GPU-manager</h3><p>基于Nvidia的k8s Device Plugin 实现<br><a href="https://github.com/tkestack/gpu-manager">GPUManager</a>是腾讯自研的容器层GPU虚拟化方案，除兼容Nvidia 官方插件的GPU资源管理功能外，还增加碎片资源调度、GPU调度拓扑优化、GPU资源Quota等功能，在容器层面实现了GPU资源的化整为零，而在原理上仅使用了wrap library和linux动态库链接技术，就实现了GPU 算力和显存的上限隔离。</p>
+<p>在工程设计上，GPUManager方案包括三个部分，cuda封装库vcuda、k8s device plugin 插件gpu-manager-daemonset和k8s调度插件gpu-quota-admission。</p>
+<p>vcuda库是一个对nvidia-ml和libcuda库的封装库，通过劫持容器内用户程序的cuda调用限制当前容器内进程对GPU和显存的使用。</p>
+<p>gpu-manager-daemonset是标准的k8s device plugin，实现了GPU拓扑感知、设备和驱动映射等功能。GPUManager支持共享和独占两种模式，当负载里tencent.com&#x2F;vcuda-core request 值在0-100情况下，采用共享模式调度，优先将碎片资源集中到一张卡上，当负载里的tencent.com&#x2F;vcuda-core request为100的倍数时，采用独占模式调度，需要注意的是GPUManager仅支持0~100和100的整数倍的GPU需求调度，无法支持150，220类的非100整数倍的GPU需求调度。</p>
+<p>gpu-quota-admission是一个k8s Scheduler extender，实现了Scheduler的predicates接口，kube-scheduler在调度tencent.com&#x2F;vcuda-core资源请求的Pod时，predicates阶段会调用gpu-quota-admission的predicates接口对节点进行过滤和绑定，同时gpu-quota-admission提供了GPU资源池调度功能，解决不同类型的GPU在namespace下的配额问题。<br><img src="/Kubernetes-GPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%96%B9%E6%A1%88/img_1.png" alt="架构图"></p>
+<p>方案优点：</p>
+<ol>
+<li>同时支持碎片和整卡调度，提高GPU资源利用率</li>
+<li>支持同一张卡上容器间GPU和显存的使用隔离</li>
+<li>基于拓扑感知，提供最优的调度策略</li>
+<li>对用户程序无侵入，用户无感</li>
+</ol>
+<p>方案缺点：</p>
+<ol>
+<li>驱动和加速库的兼容性依赖于厂商</li>
+<li>存在约5%的性能损耗</li>
+</ol>
+<p><strong>此项目腾讯云官方已不再支持，社区也处在无人维护状态，亲测cuda12有问题，调用报错</strong></p>
+<h3 id="HAMi"><a href="#HAMi" class="headerlink" title="HAMi"></a>HAMi</h3><p><a href="https://github.com/Project-HAMi/HAMi/tree/master">HAMi</a> 可为多种异构设备提供虚拟化功能，支持设备共享和资源隔离。<br>支持的设备：<br><img src="/Kubernetes-GPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%96%B9%E6%A1%88/img_2.png" alt="支持的设备"></p>
+<p><img src="/Kubernetes-GPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E6%96%B9%E6%A1%88/img_3.png" alt="架构"></p>
+<p>HAMi 由多个组件组成，包括统一的 mutatingwebhook、统一的调度器扩展器、不同的设备插件以及针对每种异构 AI 设备的容器内虚拟化技术。<br><a href="https://github.com/Project-HAMi/HAMi/tree/master">https://github.com/Project-HAMi/HAMi/tree/master</a></p>
+<p>能力：</p>
+<ul>
+<li>支持碎片、整卡、多卡调度隔离，支持按量或者按百分比调度隔离</li>
+<li>支持指定目标卡型</li>
+<li>支持指定目标卡</li>
+</ul>
+<p>目前该项目非常活跃，并且支持的cuda版本也比较友好，<a href="https://github.com/Project-HAMi/HAMi/issues/785">&gt;10.1</a></p>
+]]></content>
+      <categories>
+        <category>Kubernetes</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+        <tag>GPU</tag>
+        <tag>AI</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Pod的优雅上下线</title>
+    <url>/Pod%E7%9A%84%E4%BC%98%E9%9B%85%E4%B8%8A%E4%B8%8B%E7%BA%BF.html</url>
+    <content><![CDATA[<p>Pod的优雅上下线依赖k8s的监控检查机制，以及 Pod lifecycle Hooks，通过这些kubernetes的机制，配合服务发现的流量管理机制，实现业务的优雅上下线。</p>
+<span id="more"></span>
+<h2 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h2><h3 id="Pod-健康检查"><a href="#Pod-健康检查" class="headerlink" title="Pod 健康检查"></a>Pod 健康检查</h3><p>Pod的健康状态由两类探针来检查：LivenessProbe和ReadinessProbe。</p>
+<ol>
+<li>livenessProbe(存活探针)<ul>
+<li>表明容器是否正在运行。</li>
+<li>如果存活探测失败，则 kubelet 会杀死容器，并且容器将受到其 重启策略的影响。</li>
+<li>如果容器不提供存活探针，则默认状态为 Success。</li>
+</ul>
+</li>
+<li>readinessProbe(就绪探针)<ul>
+<li>表明容器是否可以正常接受请求。</li>
+<li>如果就绪探测失败，端点控制器将从与 Pod 匹配的所有 Service 的端点中删除该 Pod 的 IP 地址。</li>
+<li>初始延迟之前的就绪状态默认为 Failure。</li>
+<li>如果容器不提供就绪探针，则默认状态为 Success。</li>
+</ul>
+</li>
+<li>StartupProbe（这个 1.16 版本增加的）<ul>
+<li>如果三个探针同时存在，先执行 StartupProbe 探针，其他两个探针将会被暂时禁用，直到 pod 满足 StartupProbe 探针配置的条件，其他 2 个探针启动，如果不满足按照规则重启容器。</li>
+</ul>
+</li>
+</ol>
+<p>两种探针的区别<br>总的来说 ReadinessProbe 和 LivenessProbe 是使用相同探测的方式，只是探测后对 Pod 的处置方式不同：</p>
+<ul>
+<li>ReadinessProbe： 当检测失败后，将 Pod 的 IP:Port 从对应 Service 关联的 EndPoint 地址列表中删除。</li>
+<li>LivenessProbe： 当检测失败后将杀死容器，并根据 Pod 的重启策略来决定作出对应的措施。</li>
+</ul>
+<p>例子</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">livenessProbe:</span></span><br><span class="line">  <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">initialDelaySeconds:</span> <span class="number">600</span></span><br><span class="line">  <span class="attr">periodSeconds:</span> <span class="number">5</span></span><br><span class="line">  <span class="attr">successThreshold:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">tcpSocket:</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">7800</span></span><br><span class="line">  <span class="attr">timeoutSeconds:</span> <span class="number">1</span></span><br><span class="line">  </span><br><span class="line"><span class="attr">readinessProbe:</span></span><br><span class="line">  <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">httpGet:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/ready</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">7800</span></span><br><span class="line">    <span class="attr">scheme:</span> <span class="string">HTTP</span></span><br><span class="line">  <span class="attr">periodSeconds:</span> <span class="number">5</span></span><br><span class="line">  <span class="attr">successThreshold:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">timeoutSeconds:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Pod-lifecycle-Hooks"><a href="#Pod-lifecycle-Hooks" class="headerlink" title="Pod lifecycle Hooks"></a>Pod lifecycle Hooks</h3><p><img src="/Pod%E7%9A%84%E4%BC%98%E9%9B%85%E4%B8%8A%E4%B8%8B%E7%BA%BF/img.png" alt="pod生命周期"></p>
+<ol>
+<li>PostStart<br>PostStart hook在容器启动的时候运行，但并不保证该hook一定会比容器指定的ENTRYPOINT命令先运行。就是说PostStart和ENTRYPOINT都会在容器启动后运行，至于谁先运行，谁先结束，并不一定，是随机的。如果容器启动的时候，PostStart没有成功，容器不会处于running状态。</li>
+<li>PreStop<br>PreStop会在kubelet给Pod发送TERM信号之前执行。一般API Server会给kubelet发送结束Pod的信号，或者Pod的liveness&#x2F;startup探针失败，或其它原因导致Pod失败，kubelet会尝试发送TERM信号给Pod里主进程。如果PreStop存在，kubelet则会优先启动PreStop，待PreStop结束之后再发送TERM信号给Pod。但从API Server将Pod标记为Terminating状态开始，整个Pod停止时间不能超过terminationGracePeriodSeconds所设置的时间，如果超过，kubelet需要发送KILL信号给Pod所有的进程。</li>
+</ol>
+<p>例子：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">lifecycle:</span></span><br><span class="line">      <span class="attr">postStart:</span></span><br><span class="line">        <span class="attr">exec:</span></span><br><span class="line">          <span class="attr">command:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">./online.sh</span></span><br><span class="line">      <span class="attr">preStop:</span></span><br><span class="line">        <span class="attr">exec:</span></span><br><span class="line">          <span class="attr">command:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">./offline.sh</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p><img src="/Pod%E7%9A%84%E4%BC%98%E9%9B%85%E4%B8%8A%E4%B8%8B%E7%BA%BF/mech.png" alt="服务注册"></p>
+<p>优雅上线的实现：</p>
+<ul>
+<li>Pod启动后，在服务治理框架（sidecar）中开始注册服务，服务注册中心收到服务治理框架的成功注册消息。</li>
+<li>同时服务注册中心管理系统会watch应用的Service的Endpoint，当Pod的IP出现时，服务治理框架会任务当前Pod状态ready可以上线服务了，当然Pod的IP出现在Endpoint列表中，本质也是就绪探针成功，这取决于服务治理框架的实现，一般服务治理框架需要提供探针健康检查的接口。</li>
+<li>服务注册中心会向上下游通知当前节点上线。</li>
+</ul>
+<p>Pod下线：</p>
+<ul>
+<li>Pod的IP从Endpoint列表中消失，服务治理框架会通知应用，应用需要下线服务。</li>
+<li>Pod pre stop hook执行后，服务治理框架会通知服务注册中心，服务注册中心会广播此节点下线，停止路由新调用，同时pre stop hook还可以确保服务内已经获得的请求都处理完毕，Pod才可以被回收。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Kubernetes</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Terraform中的for_each和count</title>
+    <url>/Terraform%E4%B8%AD%E7%9A%84for-each%E5%92%8Ccount.html</url>
+    <content><![CDATA[<p>通过Terraform创建云主机时，在某些业务场景下，一个机器需要挂载多个云盘，一般云厂商都是单独创建云主机和云硬盘然后通过attachment的资源去挂载，因此我们的模板大致如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;tencentcloud_instance&quot; &quot;basic&quot; &#123;</span><br><span class="line">  instance_name     = var.instance_name</span><br><span class="line">  password = &quot;xxx&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_cbs_storage&quot; &quot;storage&quot; &#123;</span><br><span class="line">  for_each          = var.data_disks</span><br><span class="line">  storage_name      = each.key</span><br><span class="line">  storage_type      = each.value.disk_type</span><br><span class="line">  storage_size      = each.value.size</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">  count       = length(tencentcloud_cbs_storage.storage)</span><br><span class="line">  storage_id  = element(values(tencentcloud_cbs_storage.storage)[*].id, count.index)</span><br><span class="line">  instance_id = tencentcloud_instance.basic.id</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">variable &quot;data_disks&quot; &#123;</span><br><span class="line">  type = map(object(&#123;</span><br><span class="line">    disk_type = string</span><br><span class="line">    size      = number</span><br><span class="line">  &#125;))</span><br><span class="line">  description = &quot;Instance Data Disks&quot;</span><br><span class="line">  default     = &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个模板我们一直用了很久，完全满足多盘的需求，也具有一定灵活性，但是随着全方位降本的需求，在服务优化等措施下，业务方评估可以考虑减少云盘数量，因为机型的特殊性，机器也不能回收重新创建。</p>
+<p>因为之前一直没有减盘的场景，所以一直没关注，直到最近业务方评估需要减盘，发现在减盘时盘的attachment会销毁重新创建，腾讯云这个资源的操作会伴随unmount动作，导致减盘之后盘没有被挂载上</p>
+<p>这个现象是不在我的预期当中的，分析Terraform的日志：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">  # tencentcloud_cbs_storage_attachment.attachment[0] must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">      ~ id          = &quot;disk-mcklmp5z&quot; -&gt; (known after apply)</span><br><span class="line">      ~ storage_id  = &quot;disk-mcklmp5z&quot; -&gt; &quot;disk-rspjpenh&quot; # forces replacement</span><br><span class="line">        # (1 unchanged attribute hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  # tencentcloud_cbs_storage_attachment.attachment[1] must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">      ~ id          = &quot;disk-rspjpenh&quot; -&gt; (known after apply)</span><br><span class="line">      ~ storage_id  = &quot;disk-rspjpenh&quot; -&gt; &quot;disk-k9c5lg1v&quot; # forces replacement</span><br><span class="line">        # (1 unchanged attribute hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  # tencentcloud_cbs_storage_attachment.attachment[2] must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">      ~ id          = &quot;disk-k9c5lg1v&quot; -&gt; (known after apply)</span><br><span class="line">      ~ storage_id  = &quot;disk-k9c5lg1v&quot; -&gt; &quot;disk-jl5g1u7f&quot; # forces replacement</span><br><span class="line">        # (1 unchanged attribute hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  # tencentcloud_cbs_storage_attachment.attachment[3] must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">      ~ id          = &quot;disk-jl5g1u7f&quot; -&gt; (known after apply)</span><br><span class="line">      ~ storage_id  = &quot;disk-jl5g1u7f&quot; -&gt; &quot;disk-mytvnnif&quot; # forces replacement</span><br><span class="line">        # (1 unchanged attribute hidden)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>发现attachment的索引是index，减盘的时候索引会重新计算，这就是attachment资源被销毁重建，导致云盘被卸载的原因。</p>
+<p>原因明确了，那就好解决了，可以用for_each来解决这个问题，如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">  for_each = toset(values(tencentcloud_cbs_storage.storage)[*].id)</span><br><span class="line">  storage_id  = each.key</span><br><span class="line">  instance_id = tencentcloud_instance.foo.id</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>事情往往没那么顺利：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">│ Error: Invalid for_each argument</span><br><span class="line">│</span><br><span class="line">│   on main.tf line 61, in resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot;:</span><br><span class="line">│   61:   for_each = toset(values(tencentcloud_cbs_storage.storage)[*].id)</span><br><span class="line">│     ├────────────────</span><br><span class="line">│     │ tencentcloud_cbs_storage.storage is object with 6 attributes</span><br><span class="line">│</span><br><span class="line">│ The &quot;for_each&quot; value depends on resource attributes that cannot be</span><br><span class="line">│ determined until apply, so Terraform cannot predict how many instances will</span><br><span class="line">│ be created. To work around this, use the -target argument to first apply</span><br><span class="line">│ only the resources that the for_each depends on.</span><br></pre></td></tr></table></figure>
+
+<p>好吧，在Terraform论坛发现一个issue：<br><a href="https://discuss.hashicorp.com/t/the-for-each-value-depends-on-resource-attributes-that-cannot-be-determined-until-apply/25016">https://discuss.hashicorp.com/t/the-for-each-value-depends-on-resource-attributes-that-cannot-be-determined-until-apply/25016</a><br><img src="/Terraform%E4%B8%AD%E7%9A%84for-each%E5%92%8Ccount/discuss.png" alt="discuss"></p>
+<p>简而言之，就是foreach要求他的map key必须是已知明确的值，不能是依赖其他资源的值，所以会有如上错误。知道限制了调整下模板：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;tencentcloud_cbs_storage_attachment&quot; &quot;attachment&quot; &#123;</span><br><span class="line">  for_each = var.data_disks</span><br><span class="line">  storage_id  = tencentcloud_cbs_storage.storage[each.key].id</span><br><span class="line">  instance_id = tencentcloud_instance.basic.id</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>圆满解决，新创建的实例用上新的模板，但是存量的实例无法调整还是得忍受下盘重新挂载的问题。</p>
+]]></content>
+      <categories>
+        <category>Terraform</category>
+      </categories>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>Terraform</tag>
+        <tag>资源交付</tag>
+        <tag>云资源</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>StackStorm(事件驱动的自动化引擎)</title>
+    <url>/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E.html</url>
+    <content><![CDATA[<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>StackStorm是一个功能强大的开源自动化平台，可将所有应用程序，服务和工作流程连接起来。 它具有可扩展性，灵活性, 设计中包含了对DevOps和ChatOps的热爱。它可以将您现有的基础架构和应用程序环境联系在一起，以便您可以更轻松地自动化操作该环境。它特别专注于针对事件采取行动。</p>
+<ul>
+<li><p>便利的故障排除 - 触发由监控系统捕获的系统故障，在物理节点、OpenStack或Amazon实例和应用程序组件上运行一系列诊断检查，并将结果发布到共享通信环境中，如HipChat或JIRA。</p>
+</li>
+<li><p>自动修复 - 识别和验证OpenStack计算节点上的硬件故障，正确隔离实例并向管理员发送关于潜在停机时间的电子邮件，但如果出现任何问题 - 暂停工作流程并呼叫人员。</p>
+</li>
+<li><p>持续部署 - 与Jenkins一起构建和测试，配置新的AWS群集，基于NewRelic的应用程序性能数据，打开负载均衡器的一些流量，以及前滚或回滚</p>
+</li>
+</ul>
+<span id="more"></span>
+
+<p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/overview.png" alt="overview"></p>
+<h4 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h4><ul>
+<li>Sensors是用于分别接收或监视事件的入站或出站集成的Python插件。 当来自外部系统的事件发生并由传感器处理时，StackStorm触发器将发射到系统中。</li>
+<li>Triggers是外部事件的StackStorm表示形式。 有通用触发器（例如定时器，webhooks）和集成触发器（例如，Sensu告警，JIRA问题更新）。 通过编写传感器插件可以定义新的触发器类型。</li>
+<li>Actions是StackStorm出站集成。 有通用动作（ssh，REST调用），集成（OpenStack，Docker，Puppet）或自定义操作。 动作是Python插件或任何脚本，通过添加几行元数据将其消耗到StackStorm中。 动作可以由用户通过CLI或API直接调用，或者作为规则和工作流程的一部分使用和调用。</li>
+<li>Rules将触发器映射到动作（或工作流），应用匹配条件并将触发器加载到动作输入中。</li>
+<li>Workflows将动作拼接成“超级Actions”，定义顺序，转换条件以及传递数据。 大多数自动化不止一步，因此需要多个动     作。 工作流就像“原子”动作一样，可在Action库中使用，并且可以手动调用或由规则触发。</li>
+<li>Packs是内容部署的单位。 它们通过对集成（触发器和动作）和自动化（规则和工作流）进行分组，简化了StackStorm可插拔内容的管理和共享。 StackStorm Exchange上有越来越多的包可用。 用户可以创建自己的包，在Github上共享它们，或者提交给StackStorm Exchange.</li>
+</ul>
+<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/workflow.png" alt="workflow"></p>
+<ol>
+<li>从各个服务系统通过push或pull的方式把event传给sensors</li>
+<li>sensors会产生一个trigger到规则配置中查询该trigger对应的动作或者工作流</li>
+<li>将来自工作流的Action发送到消息队列（内置rabbitmq）中Actions到达外部的系统后就执行相应的动作</li>
+<li>日志和审计历史被推送到数据库进行存储（Mongodb）</li>
+</ol>
+<h3 id="Sensors"><a href="#Sensors" class="headerlink" title="Sensors"></a>Sensors</h3><p>传感器是将外部系统和事件与StackStorm集成的一种方式。传感器是一段Python代码，它们要么定期轮询某些外部系统，要么被动地等待入站事件。</p>
+<p>SampleSensor Yaml:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">class_name: &quot;SampleSensor&quot;</span><br><span class="line">entry_point: &quot;sample_sensor.py&quot;</span><br><span class="line">description: &quot;Sample sensor that emits triggers.&quot;</span><br><span class="line">trigger_types:</span><br><span class="line">  -</span><br><span class="line">    name: &quot;event&quot;</span><br><span class="line">    description: &quot;An example trigger.&quot;</span><br><span class="line">    payload_schema:</span><br><span class="line">      type: &quot;object&quot;</span><br><span class="line">      properties:</span><br><span class="line">        executed_at:</span><br><span class="line">          type: &quot;string&quot;</span><br><span class="line">          format: &quot;date-time&quot;</span><br><span class="line">          default: &quot;2014-07-30 05:04:24.578325&quot;</span><br></pre></td></tr></table></figure>
+
+<p>SampleSensor Python:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">from st2reactor.sensor.base import Sensor</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class SampleSensor(Sensor):</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    * self.sensor_service</span><br><span class="line">        - provides utilities like</span><br><span class="line">            - get_logger() - returns logger instance specific to this sensor.</span><br><span class="line">            - dispatch() for dispatching triggers into the system.</span><br><span class="line">    * self._config</span><br><span class="line">        - contains parsed configuration that was specified as</span><br><span class="line">          config.yaml in the pack.</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    def setup(self):</span><br><span class="line">        # Setup stuff goes here. For example, you might establish connections</span><br><span class="line">        # to external system once and reuse it. This is called only once by the system.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def run(self):</span><br><span class="line">        # This is where the crux of the sensor work goes.</span><br><span class="line">        # This is called once by the system.</span><br><span class="line">        # (If you want to sleep for regular intervals and keep</span><br><span class="line">        # interacting with your external system, you&#x27;d inherit from PollingSensor.)</span><br><span class="line">        # For example, let&#x27;s consider a simple flask app. You&#x27;d run the flask app here.</span><br><span class="line">        # You can dispatch triggers using sensor_service like so:</span><br><span class="line">        # self.sensor_service(trigger, payload, trace_tag)</span><br><span class="line">        #   # You can refer to the trigger as dict</span><br><span class="line">        #   # &#123; &quot;name&quot;: $&#123;trigger_name&#125;, &quot;pack&quot;: $&#123;trigger_pack&#125; &#125;</span><br><span class="line">        #   # or just simply by reference as string.</span><br><span class="line">        #   # i.e. dispatch($&#123;trigger_pack&#125;.$&#123;trigger_name&#125;, payload)</span><br><span class="line">        #   # E.g.: dispatch(&#x27;examples.foo_sensor&#x27;, &#123;&#x27;k1&#x27;: &#x27;stuff&#x27;, &#x27;k2&#x27;: &#x27;foo&#x27;&#125;)</span><br><span class="line">        #   # trace_tag is a tag you would like to associate with the dispatched TriggerInstance</span><br><span class="line">        #   # Typically the trace_tag is unique and a reference to an external event.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def cleanup(self):</span><br><span class="line">        # This is called when the st2 system goes down. You can perform cleanup operations like</span><br><span class="line">        # closing the connections to external system here.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def add_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is created</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def update_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is updated</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def remove_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is deleted</span><br><span class="line">        pass</span><br></pre></td></tr></table></figure>
+
+<h3 id="Triggers"><a href="#Triggers" class="headerlink" title="Triggers"></a>Triggers</h3><p>用于标识传入StackStorm的事件<br>Internal Triggers：</p>
+<ol>
+<li>st2.generic.actiontrigger</li>
+<li>st2.generic.notifytrigger</li>
+<li>st2.action.file_writen</li>
+<li>st2.generic.inquiry</li>
+</ol>
+<h3 id="Rules"><a href="#Rules" class="headerlink" title="Rules"></a>Rules</h3><p>StackStorm使用Rules和Workflow操作模式捕获为自动化。规则将触发器映射到操作（或工作流），应用匹配条件，并将触发器有效负载映射到Actions输入</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">name: &quot;rule_name&quot;                      # required</span><br><span class="line">pack: &quot;examples&quot;                       # optional</span><br><span class="line">description: &quot;Rule description.&quot;       # optional</span><br><span class="line">enabled: true                          # required</span><br><span class="line"></span><br><span class="line">trigger:                               # required</span><br><span class="line">    type: &quot;trigger_type_ref&quot;</span><br><span class="line"></span><br><span class="line">criteria:                              # optional</span><br><span class="line">    trigger.payload_parameter_name1:</span><br><span class="line">        type: &quot;regex&quot;</span><br><span class="line">        pattern : &quot;^value$&quot;</span><br><span class="line">    trigger.payload_parameter_name2:</span><br><span class="line">        type: &quot;iequals&quot;</span><br><span class="line">        pattern : &quot;watchevent&quot;</span><br><span class="line"></span><br><span class="line">action:                                # required</span><br><span class="line">    ref: &quot;action_ref&quot;</span><br><span class="line">    parameters:                        # optional</span><br><span class="line">        foo: &quot;bar&quot;</span><br><span class="line">        baz: &quot;&#123;&#123; trigger.payload_parameter_1 &#125;&#125;&quot;</span><br></pre></td></tr></table></figure>
+<h3 id="Actions"><a href="#Actions" class="headerlink" title="Actions"></a>Actions</h3><p>Action是可以在您的环境中执行任意自动化或修复任务的代码段。它们可以用任何编程语言编写，是最小执行单元。</p>
+<ul>
+<li>local-shell-cmd&#x2F;local-shell-script</li>
+<li>remote-shell-cmd&#x2F;remote-shell-script</li>
+<li>python-script</li>
+<li>http-request</li>
+<li>workflow</li>
+<li>自定义</li>
+</ul>
+<p>Sample Python Action：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">name: &quot;echo_action&quot;</span><br><span class="line">runner_type: &quot;python-script&quot;</span><br><span class="line">description: &quot;Print message to standard output.&quot;</span><br><span class="line">enabled: true</span><br><span class="line">entry_point: &quot;my_echo_action.py&quot;</span><br><span class="line">parameters:</span><br><span class="line">    message:</span><br><span class="line">        type: &quot;string&quot;</span><br><span class="line">        description: &quot;Message to print.&quot;</span><br><span class="line">        required: true</span><br><span class="line">        position: 0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import sys</span><br><span class="line"></span><br><span class="line">from st2common.runners.base_action import Action</span><br><span class="line"></span><br><span class="line">class MyEchoAction(Action):</span><br><span class="line">    def run(self, message):</span><br><span class="line">        print(message)</span><br><span class="line"></span><br><span class="line">        if message == &#x27;working&#x27;:</span><br><span class="line">            return (True, message)</span><br><span class="line">        return (False, message)</span><br></pre></td></tr></table></figure>
+<h3 id="Workflows"><a href="#Workflows" class="headerlink" title="Workflows"></a>Workflows</h3><p>为了捕获并自动执行这些操作，StackStorm使用了工作流程。工作流将原子动作嵌入到更高级别的自动化中，并通过在正确的时间以正确的输入调用正确的动作来编排其执行。可以理解为扩展版本的Actions</p>
+<ol>
+<li>Orquesta: designed specifically for StackStorm </li>
+<li>ActionChain: one by one</li>
+<li>Mistral: a dedicated workflow service, originated in OpenStack</li>
+</ol>
+<p>Orquesta:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">version: 1.0</span><br><span class="line"></span><br><span class="line">description: A simple workflow.</span><br><span class="line"></span><br><span class="line"># A list of strings, assuming value will be provided at runtime or</span><br><span class="line"># key value pairs where value is the default value when value</span><br><span class="line"># is not provided at runtime.</span><br><span class="line">input:</span><br><span class="line">  - arg1</span><br><span class="line">  - arg2: abc</span><br><span class="line"></span><br><span class="line"># A list of key value pairs.</span><br><span class="line">vars:</span><br><span class="line">  - var1: 123</span><br><span class="line">  - var2: True</span><br><span class="line">  - var3: null</span><br><span class="line"></span><br><span class="line"># A dictionary of task definition. The order of execution is</span><br><span class="line"># determined by inbound task transition and the condition of</span><br><span class="line"># the outbound transition.</span><br><span class="line">tasks:</span><br><span class="line">  task1:</span><br><span class="line">    action: core.noop</span><br><span class="line">    next:</span><br><span class="line">      - do: task2</span><br><span class="line">  task2:</span><br><span class="line">    action: core.noop</span><br><span class="line"></span><br><span class="line"># A list of key value pairs to output.</span><br><span class="line">output:</span><br><span class="line">  - var3: &lt;% ctx().arg1 %&gt;</span><br><span class="line">  - var4:</span><br><span class="line">      var41: 456</span><br><span class="line">      var42: def</span><br><span class="line">  - var5:</span><br><span class="line">      - 1.0</span><br><span class="line">      - 2.0</span><br><span class="line">      - 3.0</span><br></pre></td></tr></table></figure>
+<p><a href="https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html">https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html</a></p>
+<h3 id="Packs"><a href="#Packs" class="headerlink" title="Packs"></a>Packs</h3><p>Packs是扩展StackStorm的集成和自动化的部署单位。Pack里包含了Actions, Workflows, Rules, Sensors。</p>
+<p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/pack.png" alt="pack example"></p>
+<p>Pack如何安装到worker上：</p>
+<ol>
+<li>pull code </li>
+<li>install requirements</li>
+<li>config</li>
+<li>reload</li>
+</ol>
+]]></content>
+      <categories>
+        <category>StackStorm</category>
+      </categories>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>StackStorm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Terraform管理云资源实践</title>
+    <url>/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5.html</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>Terraform是一款开源的Cli工具，网上的很多文章都是单机安装一个然后创建个目录就去操作云资源；如果在高可用的前提，如何将Terraform cli变成一个嵌入运维流程的一个组件？不仅仅是人编写tf模板然后去apply？</p>
+<p>自动化的驱动Terraform，无非包含这几个步骤：</p>
+<ul>
+<li>初始化Terraform</li>
+<li>填充资源模板</li>
+<li>apply资源</li>
+<li>show资源</li>
+</ul>
+<span id="more"></span>
+
+<h3 id="初始化Terraform"><a href="#初始化Terraform" class="headerlink" title="初始化Terraform"></a>初始化Terraform</h3><p>创建一个云资源目录，如cloudxxx-test001<br>云资源的目录下需要有Terrafor的Provider信息，以及实例声明信息。<br>创建好了模板文件，就需要初始化Terraform，以及下载Provider插件，建议提前下载好插件到指定的目录，使用容器可以直接打到镜像里<br>这样初始化直接指定plugin地址：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/bin/terraform init -plugin-dir=/Users/lixiangli/.terraform.d/plugins</span><br></pre></td></tr></table></figure>
+<p><strong>注意:确保插件地址内有你声明的插件版本</strong></p>
+<p>由于Terraform apply是不支持选择apply哪个资源，因此上面的实现方式可以发现，一个目录是放一个云资源。为了让每次操作的影响范围是可控的。这种方式会带来一个问题，就是state的文件存储也必须是隔离的，否则出现的情况是apply 资源cloudxxx-test001时 cloudxxx-test002会被直接删除。</p>
+<h3 id="模板文件生成"><a href="#模板文件生成" class="headerlink" title="模板文件生成"></a>模板文件生成</h3><p>通过代码的方式去驱动Terraform, 无法避免的一步就是生成所对应的云资源的模板文件，我们这边使用golang，所以找到需要对接的云的Provider的文档然后定义成如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone = &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              = &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         = &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         = &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       = &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>在程序运行时动态填充这些模板即可</p>
+<h3 id="选择合适的状态存储"><a href="#选择合适的状态存储" class="headerlink" title="选择合适的状态存储"></a>选择合适的状态存储</h3><p>Terraform是个有状态的组件，如果部署多个实例的话，官方默认的state文件的模式必然是无法满足需求的。<br>所以我们这边选择的是etcdv3<br>配置如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    ucloud = &#123;</span><br><span class="line">      source = &quot;ucloud/ucloud&quot;</span><br><span class="line">      version = &quot;~&gt;1.23.0&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  backend &quot;etcdv3&quot; &#123;</span><br><span class="line">    endpoints = [&quot;http://127.0.0.1:2379/&quot;]</span><br><span class="line">    lock      = true</span><br><span class="line">    prefix    = &quot;/terraform-state/clouddisk/77c2d636-7a59-11eb-9d32-12caef3c0b88&quot;</span><br><span class="line">    cacert_path = &quot;&quot;</span><br><span class="line">    cert_path = &quot;&quot;</span><br><span class="line">    key_path = &quot;&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">provider &quot;ucloud&quot; &#123;</span><br><span class="line">    public_key  = &quot;xxxxxxx&quot;</span><br><span class="line">    private_key = &quot;xxxxxx&quot;</span><br><span class="line">    region      = &quot;cn-bj2&quot;</span><br><span class="line">    project_id  = &quot;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>backend的prefix资源加了uuid，实际上是为了解决上面一个目录是放一个云资源锁带来的问题，也就是说那个uuid实际上是对应的单独资源id，每个资源都有单独的state文件</p>
+<h3 id="如何支持多云"><a href="#如何支持多云" class="headerlink" title="如何支持多云"></a>如何支持多云</h3><p>支持多云是Terraform的强项，支持多云依然需要在上次软件做好一定的屏蔽工作。<br>Terraform需要做的就是准备好多套云的tf模板去填充<br>如腾讯云：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;tencentcloud_cbs_storage&quot; &quot;tencentcloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  storage_type      = &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  storage_name      = &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  storage_size      = &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  availability_zone = &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  project_id        = &quot;&#123;&#123; .Spec.ProjectID &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如优刻得：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;ucloud_disk&quot; &quot;ucloud_disk_&#123;&#123; .ObjectMeta.UID &#125;&#125;&quot; &#123;</span><br><span class="line">  availability_zone = &quot;&#123;&#123; .Spec.Zone &#125;&#125;&quot;</span><br><span class="line">  name              = &quot;&#123;&#123; .Spec.InstanceName &#125;&#125;&quot;</span><br><span class="line">  disk_size         = &quot;&#123;&#123; .Spec.InstanceSize &#125;&#125;&quot;</span><br><span class="line">  disk_type         = &quot;&#123;&#123; .Spec.InstanceType &#125;&#125;&quot;</span><br><span class="line">  charge_type       = &quot;&#123;&#123; .Spec.ChargeType &#125;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上层的数据结构可以声明成一样的，所有的差异由tf模板来屏蔽</p>
+]]></content>
+      <categories>
+        <category>Terraform</category>
+      </categories>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>Terraform</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>kubernetes负载感知调度</title>
+    <url>/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6.html</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>kubernetes 的原生调度器只能通过资源请求来调度 pod，这很容易造成一系列负载不均的问题，<br>并且很多情况下业务方都是超额申请资源，因此在原生调度器时代我们针对业务的特性以及评估等级来设置 Requests&#x2F;Limit 比例来提升资源利用效率。<br>在这种场景下依然存在很多问题：</p>
+<ol>
+<li>节点负载不均：原生 Kubernetes Scheduler 根据 Requests 和节点可分配总量来调度 Pod，既不考虑实时负载，也不估计使用量，这种纯静态的调度导致节点资源利用率分配不均。<br>在流量波动性业务的场景下，在流量高峰时，部分节点利用率突破安全阈值，但是很多节点的利用率特别点，节点利用率相差特别大</li>
+<li>业务周期性：在离线集群分离，在线集群底峰存在巨大资源浪费</li>
+</ol>
+<span id="more"></span>
+<p>本文主要讨论如果解决问题一，在线集群内部提升资源利用率</p>
+<p>在线集群 Cpu 离散系数0.45，整个集群高峰时 Cpu 利用率仅25%左右；下图 Cpu 使用率离散图：</p>
+<p><img src="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/old_cpu_use.png" alt="cpu使用率离散图"></p>
+<h2 id="破局"><a href="#破局" class="headerlink" title="破局"></a>破局</h2><p>基于上述情况，高峰时 Cpu 利用率仅25%肯定不是合理的情况，业界做的好的50%+。想要继续提升利用率，必须解决节点负载不均问题：</p>
+<ol>
+<li>感知节点真实负载：要解决节点负载不均问题，必须要上报节点当前真实的负载</li>
+<li>基于负载的正向调度插件：在默认调度器的基础上增加基于负载的调度插件，在正向调度是尽量保证节点间水位平均</li>
+<li>基于负载的重调度组件：当业务不断波动，节点可能会因为应用负载变化导致节点负载出现差别，需要重调度迁移 Pod 重新达到平均</li>
+</ol>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>关注的两个开源项目：</p>
+<p>Koordinator: <a href="https://koordinator.sh/">https://koordinator.sh/</a></p>
+<p>Crane: <a href="https://gocrane.io/">https://gocrane.io/</a></p>
+<p>相对于 Koordinator 专门为混部而生的软件，Crane以 Finops 为出发点，二者相比Koordinator更适合我们，在离线混部也是下一步计划。</p>
+<p><a href="https://leason.top/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html">调研测试</a></p>
+<p>上线之后：<br><img src="/kubernetes%E8%B4%9F%E8%BD%BD%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6/new_cpu_use.png" alt="cpu使用率离散图"></p>
+<h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ol>
+<li>热点节点问题：在业务高峰时，节点负载变高，会出现热点节点，这个时候需要重调度组件介入，把 Pod 重新调度到其他节点上</li>
+</ol>
+<p>需要前置打散热点节点，这就需要对应用进行资源画像，在调度中分散这种类型的应用，避免业务高峰热点节点的产生<br>2. 在1中的情况下，扩容部分节点缓解集群压力时，新上的节点会迅速被热点Pod占满，导致节点负载升高，再次触发重调度</p>
+<p>调整调度插件中负载均衡打分插件的权重，让节点负载更均衡，避免热点节点问题<br>3. 找到合适的节点规格，小规格节点，更容器出现热点节点</p>
+<p>在我们的业务场景下下，当前来看48c节点热点节点出现几率小于32c</p>
+]]></content>
+      <categories>
+        <category>混部</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+        <tag>混部</tag>
+        <tag>koordinator</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从Workload中优雅隔离Pod</title>
+    <url>/%E4%BB%8EWorkload%E4%B8%AD%E4%BC%98%E9%9B%85%E9%9A%94%E7%A6%BBPod.html</url>
+    <content><![CDATA[<p>线上集群中，业务跑着跑着，突然发现有个Pod上出现大量错误日志，其他的Pod是正常的，该如何处理呢？</p>
+<ul>
+<li>直接删除Pod？</li>
+</ul>
+<p>这样不便于保留现场，可能会影响判断问题的根因</p>
+<ul>
+<li>让业务方忍一会，先排查下问题？</li>
+</ul>
+<p>会被喷死</p>
+<p>最好的方案是既让Pod停止接收流量，又保留Pod</p>
+<span id="more"></span>
+
+<ol>
+<li>停止接收流量</li>
+</ol>
+<p>停止接收流量这个动作是通过Pod的label来实现的，通过修改label来实现。其实本质就是把Pod从endpoint中移除，这样无论是服务化，还是http都会把当前这个节点移除，不再转发流量。<br>当然，这里的前提是服务化和http的节点发现是基于k8s的endpoint来实现的（理论上大家都会这么干，不排除有黑科技）。</p>
+<p>首先要主动调用服务下线的方法，理论上这个调用应该会配再Pod的prestop钩子中，这样Pod被删除的时候，会先调用这个方法，然后再删除Pod。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">preStop:</span></span><br><span class="line">    <span class="attr">exec:</span></span><br><span class="line">      <span class="attr">command:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/bin/stop.sh</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>将Pod从Workload中移除</li>
+</ol>
+<p>调用下线完毕之后，再修改Pod的标签，这个标签的修改可以让Pod脱离Workload的控制，变成孤儿Pod，注意修改Pod标签也要让service的selector选择不到这个Pod，这样Pod也就从endpoint中移除，服务发现也就感知不到这个节点了。</p>
+<ol start="3">
+<li>如果Pod是消费型业务，比如说 nsq worker，不具备主动发起下线怎么办？</li>
+</ol>
+<p>这种情况，可以直接将Pod网络切断，这样Pod就无法接收流量了，切断方式也很简单，直接在Pod上加一个iptables规则，将流量全部丢弃即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/sbin/iptables -A INPUT -s &#123;node_ip&#125;/32 -j ACCEPT &amp;&amp;   // 允许节点访问，避免kubelet liveness检查失败</span><br><span class="line">/sbin/iptables -A OUTPUT -d &#123;node_ip&#125;/32 -j ACCEPT &amp;&amp;</span><br><span class="line">/sbin/iptables -A OUTPUT -s localhost -d localhost -j ACCEPT &amp;&amp;</span><br><span class="line">/sbin/iptables -A INPUT -s localhost -d localhost -j ACCEPT &amp;&amp;</span><br><span class="line">/sbin/iptables -A INPUT -p tcp --tcp-flags RST RST -j ACCEPT &amp;&amp;</span><br><span class="line">/sbin/iptables -A OUTPUT -p tcp --tcp-flags RST RST -j ACCEPT &amp;&amp;</span><br><span class="line">/sbin/iptables -A INPUT -p tcp -j REJECT --reject-with tcp-reset &amp;&amp;</span><br><span class="line">/sbin/iptables -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset&quot;&quot;&quot;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Kubernetes</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>什么是基础设施即代码</title>
+    <url>/%E4%BB%80%E4%B9%88%E6%98%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%8D%B3%E4%BB%A3%E7%A0%81.html</url>
+    <content><![CDATA[<p>基础设施即代码（Infrastructure as Code）是一种将基础设施的配置和管理过程自动化的方法。它借鉴了软件开发中的一些实践，如版本控制、自动化测试和持续集成，将基础设施的配置和管理过程描述为可执行的代码。</p>
+<p>通过使用基础设施即代码，开发团队可以将基础设施的配置和管理过程存储为代码，并将其纳入版本控制系统中。这样一来，团队成员可以对基础设施进行版本控制、进行代码审查和合并，并且可以使用自动化工具来验证和部署基础设施的更新。</p>
+<p>借助基础设施即代码，可以实现以下优势：</p>
+<ul>
+<li>可重复性和可靠性：通过代码来定义基础设施，可以确保环境的一致性，避免了人工配置的差错，并且可以重复使用、再现和共享配置。</li>
+<li>自动化和可伸缩性：通过自动化工具，可以更快速、可靠地创建、更新和销毁基础设施，提高部署效率和灵活性，并支持快速的扩展和缩减。</li>
+<li>文档化和可视化：基础设施即代码的代码本身可以作为文档，提供对基础设施配置的清晰描述，同时可以生成可视化的拓扑图或文档来展示基础设施的结构和关系。<br>总之，基础设施即代码是一种有效的方法，可以提高基础设施的可管理性、可测试性和可靠性，促进基础设施和应用程序的协同演进。</li>
+</ul>
+<p>以上是ChatGPT对基础设施即代码的理解。</p>
+<span id="more"></span>
+
+<p>我们在基于 Terraform 落地基础设施即代码时，遇到了一个很有趣的问题，这个问题让我对基础设施即代码有了更深刻的理解。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>使用 Terraform 托管腾讯云 MySQL 实例时，这这么一个字段：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">first_slave_zone</span> <span class="bullet">-</span> <span class="string">(Optional,</span> <span class="string">String,</span> <span class="string">ForceNew)</span> <span class="string">Zone</span> <span class="string">information</span> <span class="string">about</span> <span class="string">first</span> <span class="string">slave</span> <span class="string">instance.</span></span><br></pre></td></tr></table></figure>
+<p>这个字段指的是第一个备库可用区，注意这个字段是 ForceNew 定义，也就是说，如果这个字段发生变化，那么这个实例就会被重新创建。<br>我们的要求是主备在不同的可用区，所以我们在配置文件中这么写：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">resource &quot;tencentcloud_mysql_instance&quot; &quot;main&quot; &#123;</span><br><span class="line">        ...</span><br><span class="line">        availability_zone = zone1</span><br><span class="line">        first_slave_zone  = zone2</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        tags = &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        parameters = &#123;</span><br><span class="line">          character_set_server = &quot;utf8mb4&quot;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>看起来一切都很完美，但是当有一天dba在对一个实例进行常规的磁盘扩容时，发现这个实例被重新创建了，老的实例被销毁了，直接故障十分钟（发现销毁后从腾讯云回收站找回）。</p>
+<p>首先要说明的是我们的 Terraform 不是用过 cli 的方式使用的，我们在内部落地了一套自动化方案，具体可以翻前面的文章。对于任何变化，都是auto approve。</p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>通过查看日志，我们发现了这么一段：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Terraform used the selected providers to generate the following execution</span><br><span class="line">plan. Resource actions are indicated with the following symbols:</span><br><span class="line">  ~ update in-place</span><br><span class="line">-/+ destroy and then create replacement</span><br><span class="line"></span><br><span class="line">Terraform will perform the following actions:</span><br><span class="line"></span><br><span class="line">  # tencentcloud_mysql_instance.main must be replaced</span><br><span class="line">-/+ resource &quot;tencentcloud_mysql_instance&quot; &quot;main&quot; &#123;</span><br><span class="line">      ~ first_slave_zone  = &quot;ap-beijing-7&quot; -&gt; &quot;ap-beijing-5&quot; # forces replacement</span><br><span class="line">      ~ gtid              = 1 -&gt; (known after apply)</span><br><span class="line">      ~ id                = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">      + internet_host     = (known after apply)</span><br><span class="line">      ~ internet_port     = 0 -&gt; (known after apply)</span><br><span class="line">      ~ intranet_ip       = &quot;xxxxxxxxx&quot; -&gt; (known after apply)</span><br><span class="line">      ~ locked            = 0 -&gt; (known after apply)</span><br><span class="line">      - pay_type          = -1 -&gt; null</span><br><span class="line">      - period            = -1 -&gt; null</span><br><span class="line">      ~ status            = 1 -&gt; (known after apply)</span><br><span class="line">      - tags              = &#123;&#125; -&gt; null</span><br><span class="line">      ~ task_status       = 0 -&gt; (known after apply)</span><br><span class="line">      ~ volume_size       = 800 -&gt; 1200</span><br><span class="line">        # (22 unchanged attributes hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  # tencentcloud_mysql_readonly_instance.readonly will be updated in-place</span><br><span class="line">  ~ resource &quot;tencentcloud_mysql_readonly_instance&quot; &quot;readonly&quot; &#123;</span><br><span class="line">        id                 = &quot;xxxx&quot;</span><br><span class="line">      ~ master_instance_id = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">        tags               = &#123;&#125;</span><br><span class="line">      ~ volume_size        = 800 -&gt; 1200</span><br><span class="line">        # (22 unchanged attributes hidden)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">Plan: 1 to add, 1 to change, 1 to destroy.</span><br><span class="line"></span><br><span class="line">Changes to Outputs:</span><br><span class="line">  ~ instance_id = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">  ~ instance_ip = &quot;xxxxx&quot; -&gt; (known after apply)</span><br><span class="line">  ~ locked      = 0 -&gt; (known after apply)</span><br><span class="line">  ~ status      = 1 -&gt; (known after apply)</span><br><span class="line">  ~ task_status = 0 -&gt; (known after apply)</span><br><span class="line">tencentcloud_mysql_instance.main: Destroying... [id=xxxxxx]</span><br><span class="line">tencentcloud_mysql_instance.main: Still destroying... [id=xxxx, 10s elapsed]</span><br><span class="line">tencentcloud_mysql_instance.main: Destruction complete after 12s</span><br><span class="line">tencentcloud_mysql_instance.main: Creating...</span><br><span class="line">tencentcloud_mysql_instance.main: Still creating... [10s elapsed]</span><br></pre></td></tr></table></figure>
+
+<p>很容易发现 first_slave_zone  &#x3D; “ap-beijing-7” -&gt; “ap-beijing-5” # forces replacement 这个字段导致了销毁重建。<br>但是问题是我们的备库实例怎么从 ap-beijing-5 变成了 ap-beijing-7哪？</p>
+<p>了解MySQL主备架构的都知道，主备切换是一个非常常见的现象，腾讯的技术支持表示，网络抖动、运维动作都可能会出现主备切换，而主备切换后，备库的可用区会变成主库的可用区，这个时候，如果我们的配置文件中没有更新 first_slave_zone 这个字段，就会导致Terraform中判定这个字段改动了，最可怕的是这个字段还是 ForceNew。</p>
+<p>腾讯的技术同学一开始表示，他们的系统没问题，是我们使用的问题，不过我们也承认，我们对接的过程中对MySQL的这个架构理解不够深，假如我们足够理解的话，我们不会认同这种Api的设计。</p>
+<p>所以在这里重新回到文章的标题，仔细思考什么是基础设施即代码。按照我们的理解我们固定在代码中的配置理论上不应该发生改变，假如说改变了，一定是不符合预期的，需要回到代码中定义的状态。<br>但是我们这个case中，切换应该是预期合理的行为，不应该销毁实例重建，因此我们认为这是Api设计问题。</p>
+<p>像这种主备状态，我们认为应该是一个状态，而不是一个配置，不应该固定在代码中。这种思想类比到k8s的Api中也是一样，资源都有Spec和Status两个字段，Spec是用户指定的，Status是系统自动计算的，用户不应该去指定更不能修改。</p>
+<p>为了证明我们的理解没问题，说服他们，我们也看了其他云厂商的Api设计，比如Aws的：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">availability_zones - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.</span><br></pre></td></tr></table></figure>
+
+<p>这里的设计是Optional，而且是一个列表，而不是一个字符串，这样设计用户指定的是一个可用区列表，而不是一个可用区，这样的设计就不会出现我们这个case中的问题。<br>无论实例在运行中如何切换都不影响，只要主备是在一个可用区列表中，就是符合预期的。</p>
+<h2 id="最终"><a href="#最终" class="headerlink" title="最终"></a>最终</h2><p>在腾讯云最新的 Api 中仅仅是把 first_slave_zone 从 ForceNew 改成了 Optional，但是这样的设计还是会出现跟用户操作无关的 first_slave_zone 改变去重建备库。作为用户的话，我很冤枉，我没动这个字段，但是我的备库重建了，我反正无法接受这个事情。</p>
+<p>在这个case中，我们认为腾讯云的对于MySQL的Api设计是有问题的，我们也提出了我们的理解，希望腾讯云能够改进这个Api设计，让用户的体验更好。<br>另外对于基础设施即代码的实践过程中，无论是设计Api还是对接Api的时候，需要充分甄别什么是配置，什么是状态。</p>
+]]></content>
+      <categories>
+        <category>Terraform</category>
+      </categories>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>Terraform</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用Packer构建镜像</title>
+    <url>/%E4%BD%BF%E7%94%A8Packer%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F.html</url>
+    <content><![CDATA[<h2 id="什么是Packer"><a href="#什么是Packer" class="headerlink" title="什么是Packer"></a>什么是Packer</h2><p><a href="https://www.packer.io/">Packer</a> 是一个强大的工具，它可以帮助我们轻松地构建各种类型的镜像，如虚拟机镜像、Docker 镜像等。</p>
+<p>Packer 的工作原理是通过定义一个配置文件，该文件描述了要构建的镜像的特征和要求。然后 Packer 使用这个配置文件来执行一系列的步骤，例如安装必要的软件、配置系统设置、复制文件等，最终生成一个可用的镜像。</p>
+<span id="more"></span>
+<h3 id="为什么要用-Packer"><a href="#为什么要用-Packer" class="headerlink" title="为什么要用 Packer"></a>为什么要用 Packer</h3><p>使用 Packer 构建镜像的好处是多方面的。</p>
+<ol>
+<li>可移植性：首先，它提供了一种可重复的、自动化的方式来创建镜像，这意味着我们可以确保每次构建的镜像都是一致的，从而减少了人为错误的风险。其次，Packer 支持多种基础设施提供商，如 AWS、VMware、Azure 等，这使得我们可以在不同的环境中轻松地部署镜像。</li>
+<li>自动化：Packer 依据单个的配置文件, 能做到流水线式 + 并发的创建镜像，与传统手工操作相比，其 “Infrastructure as Code” 的工作方式也大大减少了失误的概率。</li>
+<li>问题的追溯与定位：在 Packer 上所有变化都是基于代码的，而代码是可以追溯的，方便快速定位问题并回滚。而在传统方式中，考虑到手动操作的过程可能涉及多人，完整地追出问题并不是一件容易的事儿。</li>
+<li>快速迭代：Packer 的配置文件是可编辑的，因此我们可以轻松地修改配置文件，然后重新构建镜像，从而快速迭代。</li>
+</ol>
+<h3 id="Packer的组成及及原理"><a href="#Packer的组成及及原理" class="headerlink" title="Packer的组成及及原理"></a>Packer的组成及及原理</h3><p>Packer包含构建器(Builder),（派生器）Provisioner,(后处理器)Post-Processor三个组件，通过JSON格式的模板文件，可以灵活的组合这三种组件并行的、自动化的创建多平台一致的镜像文件。为单个平台生成镜像的单个任务称为构建，而单个构建的结果也称为工件(Artifact)，多个构建可以并行运行。</p>
+<ul>
+<li>Builder又称构建器，能够为单个平台创建镜像。构建器读取一些配置并使用它来运行和生成镜像。作为构建的一部分调用构建器以创建实际生成的镜像。常见的构建器包括VirtualBox，Alicloud ECS和Amazon EC2。构建器可以以插件的形式创建并添加到Packer中。</li>
+<li>Provisioner(派生器），这一组件在Buider创建的运行的机器中安装和配置软件。他们执行使镜像包含有用软件的主要工作。常见的派生器包括shell脚本，Chef，Puppet等。</li>
+<li>Post-Processors(后处理器），它使用构建器或另一个后处理器的结果来创建新工件的过程。例如压缩后处理器压缩工件，上传后处理器上传工件等。</li>
+</ul>
+<h2 id="落地"><a href="#落地" class="headerlink" title="落地"></a>落地</h2><ol>
+<li>通过qemu-kvm本地构建镜像</li>
+<li>通过gitlab仓库管理镜像构建的参数配置模板</li>
+<li>通过gitops触发构建，跟踪构建日志以及构建结果(提交模板变更merge request，通过评论触发构建任务)</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Packer</td>
+<td>1.9.4</td>
+<td>官方文档</td>
+</tr>
+<tr>
+<td>Packer-plugin-qemu</td>
+<td>1.0.10</td>
+<td>Packer 插件</td>
+</tr>
+<tr>
+<td>qemu-kvm</td>
+<td>7.0.0</td>
+<td>QEMU 7.0.0</td>
+</tr>
+</tbody></table>
+<p><img src="/%E4%BD%BF%E7%94%A8Packer%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F/WX20240614-153140.png" alt="构建流程"></p>
+<h3 id="模板"><a href="#模板" class="headerlink" title="模板"></a>模板</h3><figure class="highlight json"><table><tr><td class="code"><pre><span class="line">packer &#123;</span><br><span class="line">  required_plugins &#123;</span><br><span class="line">    qemu = &#123;</span><br><span class="line">      source  = <span class="attr">&quot;github.com/hashicorp/qemu&quot;</span></span><br><span class="line">      version = <span class="attr">&quot;&gt;= 1.0.10&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">variable <span class="string">&quot;checksum&quot;</span> &#123;</span><br><span class="line">  type    = string</span><br><span class="line">  default = <span class="attr">&quot;xxxxxxx&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">variable <span class="string">&quot;ssh_password&quot;</span> &#123;</span><br><span class="line">  type    = string</span><br><span class="line">  default = <span class="attr">&quot;xxxxx&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">source <span class="string">&quot;qemu&quot;</span> <span class="string">&quot;autogenerated_1&quot;</span> &#123;</span><br><span class="line">  accelerator          = <span class="attr">&quot;kvm&quot;</span></span><br><span class="line">  boot_command         = [<span class="attr">&quot;&lt;tab&gt; inst.text &quot;</span>, <span class="attr">&quot;console=ttyS0,115200n8 &quot;</span>, <span class="attr">&quot;inst.ks=http://&#123;&#123; .HTTPIP &#125;&#125;:&#123;&#123; .HTTPPort &#125;&#125;/ks/rocky9.ks &quot;</span>, <span class="attr">&quot;nameserver=1.1.1.1 &quot;</span>, <span class="attr">&quot;&lt;enter&gt;&lt;wait&gt; &quot;</span>]</span><br><span class="line">  boot_wait            = <span class="attr">&quot;0s&quot;</span></span><br><span class="line">  communicator         = <span class="attr">&quot;ssh&quot;</span></span><br><span class="line">  format               = <span class="attr">&quot;qcow2&quot;</span></span><br><span class="line">  headless             = true</span><br><span class="line">  iso_checksum         = <span class="attr">&quot;sha256:$&#123;var.checksum&#125;&quot;</span></span><br><span class="line">  iso_url              = <span class="attr">&quot;../../../Rocky-9.2-x86_64-minimal.iso&quot;</span></span><br><span class="line">  qemu_binary          = <span class="attr">&quot;/usr/libexec/qemu-kvm&quot;</span></span><br><span class="line">  qemuargs             = [[<span class="attr">&quot;-m&quot;</span>, <span class="attr">&quot;4096&quot;</span>], [<span class="attr">&quot;-smp&quot;</span>, <span class="attr">&quot;2,sockets=2,cores=1,threads=1&quot;</span>], [<span class="attr">&quot;-cpu&quot;</span>, <span class="attr">&quot;host&quot;</span>], [<span class="attr">&quot;-serial&quot;</span>, <span class="attr">&quot;file:serial.out&quot;</span>]]</span><br><span class="line">  shutdown_command     = <span class="attr">&quot;/sbin/halt -h -p&quot;</span></span><br><span class="line">  shutdown_timeout     = <span class="attr">&quot;120m&quot;</span></span><br><span class="line">  ssh_password         = <span class="attr">&quot;$&#123;var.ssh_password&#125;&quot;</span></span><br><span class="line">  ssh_timeout          = <span class="attr">&quot;1500s&quot;</span></span><br><span class="line">  ssh_username         = <span class="attr">&quot;root&quot;</span></span><br><span class="line">  http_content = &#123;</span><br><span class="line">      <span class="attr">&quot;/ks/rocky9.ks&quot;</span>     = file(<span class="attr">&quot;../../kickstart/rocky9.ks&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">build &#123;</span><br><span class="line">  description = <span class="attr">&quot;\tMinimal Rockylinux 9 Qemu Imageni\n__________________________________________&quot;</span></span><br><span class="line"></span><br><span class="line">  sources = [<span class="attr">&quot;source.qemu.autogenerated_1&quot;</span>]</span><br><span class="line"></span><br><span class="line">  provisioner <span class="attr">&quot;shell&quot;</span> &#123;</span><br><span class="line">    script = <span class="attr">&quot;./provisioner.sh&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">#  provisioner <span class="string">&quot;file&quot;</span> &#123;   <span class="comment">// 拷贝配置文件</span></span><br><span class="line">#    destination = <span class="attr">&quot;/etc/cloud/cloud.cfg&quot;</span></span><br><span class="line">#    source      = <span class="attr">&quot;../../resource/cloud.cfg&quot;</span></span><br><span class="line">#  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置库组织形式"><a href="#配置库组织形式" class="headerlink" title="配置库组织形式"></a>配置库组织形式</h3><ol>
+<li>配置仓库模板化了kickstart文件（这个部分往往是不经常变动的）</li>
+<li>对于不同镜像的模板文件放在不同的目录下，方便管理</li>
+<li>同一个镜像目录下三个文件 <ol>
+<li>packer的hcl文件（packer模板主文件）</li>
+<li>provisioner.sh 制备过程中脚本，镜像中需要安装的包，修改的文件等等</li>
+<li>env.yaml 为了联动DevOps系统的一些配置，比如标识当前这个镜像的版本、类型、用途等等</li>
+</ol>
+</li>
+<li>resources 目录主要存放一些资源文件，如配置文件，脚本等等</li>
+</ol>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="string">├──</span> <span class="string">kickstart</span>        <span class="comment"># kickstart 配置文件存放目录</span></span><br><span class="line"><span class="string">│</span>   <span class="string">├──</span> <span class="string">rocky9.ks</span></span><br><span class="line"><span class="string">├──</span> <span class="string">packer</span>           <span class="comment"># 不同版本镜像模板文件</span></span><br><span class="line"><span class="string">│</span>   <span class="string">├──</span> <span class="string">rocky9</span></span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">rocky9.pkr.hcl</span></span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">provisioner.sh</span>  <span class="comment"># 制备过程中脚本，安装包，修改内核参数等等</span></span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">env.yaml</span>   <span class="comment"># 系统一些配置，如os_type，os_version</span></span><br><span class="line"><span class="string">│</span>   <span class="string">├──</span> <span class="string">centos7</span> </span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">centos7.pkr.hcl</span></span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">provisioner.sh</span></span><br><span class="line"><span class="string">│</span>   <span class="string">│</span>   <span class="string">├──</span> <span class="string">env.yaml</span>   <span class="comment"># 系统一些配置，如os_type，os_version</span></span><br><span class="line"><span class="string">├──</span> <span class="string">resources</span>        <span class="comment"># 一些资源文件，配置文件可以直接cpoy过去</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h3><p><img src="/%E4%BD%BF%E7%94%A8Packer%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F/WX20240614-151347.png" alt="构建镜像"></p>
+<p><img src="/%E4%BD%BF%E7%94%A8Packer%E6%9E%84%E5%BB%BA%E9%95%9C%E5%83%8F/WX20240614-151421.png" alt="上传镜像"></p>
+<h3 id="好处"><a href="#好处" class="headerlink" title="好处"></a>好处</h3><ol>
+<li>提升构建镜像自动化程度，提升效率：以往运维同学手动到云上打镜像得到镜像ID然后配置到DevOps系统中</li>
+<li>镜像版本可以描述，版本可追溯，更透明：以往的镜像版本都是通过人工打的，过段时间没人知道当前运行的镜像里面做了哪些改动，装了哪些东西，具有什么特性</li>
+</ol>
+]]></content>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>Packer</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>初识Terraform</title>
+    <url>/%E5%88%9D%E8%AF%86Terraform.html</url>
+    <content><![CDATA[<h3 id="Terraform介绍"><a href="#Terraform介绍" class="headerlink" title="Terraform介绍"></a>Terraform介绍</h3><p>Terraform是一种开源工具，用于安全高效地预配和管理云基础结，支持多家云服务提供商。以代码的形式将所要管理的资源定义在模板中，通过解析并执行模板来自动化完成所定义资源的创建，变更和管理，进而达到自动化运维的目标。<br>是基础设施即代码的一个实现。</p>
+<span id="more"></span>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>Terraform版本：0.13.5<br>OS：Centos7 (on docker)</p>
+<h5 id="下载安装包"><a href="#下载安装包" class="headerlink" title="下载安装包"></a>下载安装包</h5><p><code>wget https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_linux_amd64.zip</code></p>
+<h5 id="解压安装包"><a href="#解压安装包" class="headerlink" title="解压安装包"></a>解压安装包</h5><p><code>unzip terraform_0.13.5_linux_amd64.zip</code><br><code>mv terraform /usr/local/bin/</code><br><code>/usr/local/bin/terraform -v</code></p>
+<p>如果看到下面这个输出，则安装成功，非常简单方便</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@a147d13d4ed4 /]# terraform version</span><br><span class="line">Terraform v0.13.5</span><br></pre></td></tr></table></figure>
+
+<h3 id="安装云厂商Provider"><a href="#安装云厂商Provider" class="headerlink" title="安装云厂商Provider"></a>安装云厂商Provider</h3><p>这里以腾讯云为例<br>通过terraform init 来自动下载provider，也可以在github上找到第三方provider编译自行安装详情见：</p>
+<p>默认Plugins的安装位置在~&#x2F;.terraform.d&#x2F;plugins 下面，也可以通过指定-plugin-dir参数选择自定义plugins</p>
+<p>terraform init -plugin-dir &#x2F;data&#x2F;terraform&#x2F;plugins  &#x2F;data&#x2F;terraform&#x2F;cloud&#x2F;</p>
+<p>&#x2F;data&#x2F;terraform&#x2F;cloud&#x2F; 此目录下需要放置声明provider的tf文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">terraform &#123;</span><br><span class="line">  required_providers &#123;</span><br><span class="line">    tencentcloud = &#123;</span><br><span class="line">      source = &quot;tencentcloudstack/tencentcloud&quot;</span><br><span class="line">      version = &quot;1.46.1&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  required_version = &quot;&gt;= 0.13&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">provider &quot;tencentcloud&quot; &#123;</span><br><span class="line">  region = var.region</span><br><span class="line">  secret_id = var.secret_id</span><br><span class="line">  secret_key = var.secret_key</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/%E5%88%9D%E8%AF%86Terraform/one.png" alt="one"></p>
+<p>上面的安装输出能看到有两个动作<br><code>Initializing the backend...</code></p>
+<p><code>Initializing provider plugins...</code></p>
+<p>由于没指定backend，所以这个backend是默认的tf.state文件，当然还有很多其他类型的</p>
+<p>后面一个就是安装tf文件里声明的provider</p>
+<h3 id="资源变更"><a href="#资源变更" class="headerlink" title="资源变更"></a>资源变更</h3><p><code>terraform apply</code><br>声明一个资源文件</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">data &quot;tencentcloud_images&quot; &quot;my_favorate_image&quot; &#123;</span><br><span class="line">  image_type = [&quot;PUBLIC_IMAGE&quot;]</span><br><span class="line">  os_name    = &quot;centos&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_instance_types&quot; &quot;my_favorate_instance_types&quot; &#123;</span><br><span class="line">  filter &#123;</span><br><span class="line">    name   = &quot;instance-family&quot;</span><br><span class="line">    values = [&quot;S1&quot;]</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  cpu_core_count = 1</span><br><span class="line">  memory_size    = 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">data &quot;tencentcloud_availability_zones&quot; &quot;my_favorate_zones&quot; &#123;&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_key_pair&quot; &quot;random_key&quot; &#123;</span><br><span class="line">  key_name   = &quot;tf_example_key6&quot;</span><br><span class="line">  public_key = &quot;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDjd8fTnp7Dcuj4mLaQxf9Zxxxxxxxxxxxxx&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">resource &quot;tencentcloud_instance&quot; &quot;foo&quot; &#123;</span><br><span class="line">  instance_name     = var.instance_name</span><br><span class="line">  availability_zone = data.tencentcloud_availability_zones.my_favorate_zones.zones.0.name</span><br><span class="line">  image_id          = data.tencentcloud_images.my_favorate_image.images.0.image_id</span><br><span class="line">  instance_type     = data.tencentcloud_instance_types.my_favorate_instance_types.instance_types.0.instance_type</span><br><span class="line">  key_name          = tencentcloud_key_pair.random_key.id</span><br><span class="line">  system_disk_type  = &quot;CLOUD_PREMIUM&quot;</span><br><span class="line"></span><br><span class="line">  disable_monitor_service    = true</span><br><span class="line">  internet_max_bandwidth_out = 2</span><br><span class="line">  count                      = 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/%E5%88%9D%E8%AF%86Terraform/two.png" alt="two"></p>
+<p>创建一个云主机附带云盘<br>apply命令是应用所有资源的变化</p>
+<p>该输出显示执行计划，描述terraform将根据配置文件执行那些动作来改变基础设施。输出格式与工具输出的diff产生的格式类似，比如git。输出内容在%20aws_instance.example%20有个%20+%20意味着Terraform将会创建该资源。在那些之下，显示将会被设置的属性。当值为<computed>时，意味着资源被创建后才能知道。</p>
+<p>创建完之后使用<code>terraform show</code>检查当前状态：</p>
+<p>如果我只想改变某个实例的状态怎么办？</p>
+<p>使用参数 <code>-target=tencentcloud_instance.foo</code></p>
+<p>同理销毁<br><code>terraform terraform destroy -target=tencentcloud_instance.foo  -var &quot;region=ap-guangzhou&quot; qcloud/</code></p>
+<h3 id="已有资源导入"><a href="#已有资源导入" class="headerlink" title="已有资源导入"></a>已有资源导入</h3><p>已有资源导入或者和声明的tf文件绑定关系</p>
+<p>terraform本身是有状态的，比如tf.state文件<br>该状态文件极其重要；它追踪创建的资源ID，所以Terraform知道它管理的是什么资源。该文件必须被保存并分发给可能使用terraform的任何人。通常建议在使用Terraform时设置<a href="https://www.terraform.io/docs/state/remote.html">远程状态</a>，来自动分享状态.</p>
+<p>导入就是让terraform拥有这些资源的状态进而进行管理</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">terraform terraform import -config=ucloud/ ucloud_instance.outstanding3 uhost-1oevmy35</span><br></pre></td></tr></table></figure>
+
+
+<p><a href="https://www.terraform.io/intro/getting-started/build.html">以上内容皆来自官方文档</a></p>
+]]></content>
+      <categories>
+        <category>Terraform</category>
+      </categories>
+      <tags>
+        <tag>运维自动化</tag>
+        <tag>Terraform</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何优雅的脚踏多朵云</title>
+    <url>/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91.html</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>现在越来越多的企业会选择将自己的业务上云，一方面是因为云厂商越来越稳定完善，上云可以获得更稳定省心的IaaS层，另一方面是相比较于自建，可以节省成本。如果企业追求更极致的SLA，往往会更近一步，选择多云，毕竟鸡蛋放两个篮子里可以更安全些。</p>
+<p>好处当然是显然易见，但是问题也随之而来</p>
+<h3 id="多云带来的问题"><a href="#多云带来的问题" class="headerlink" title="多云带来的问题"></a>多云带来的问题</h3><p>多云会带来很多问题，比如多云之间的网络专线费用，多云之间的流量隔离（故障容灾），以及他们之前不通的技术栈所带来的运维层面的屏蔽。我们这里着重谈论多云带来的云资源交付的问题：</p>
+<ol>
+<li>资源交付自动化的过程中需要对接多云的文档或者SDK，体力活，并且会有持续的增量开发</li>
+<li>产品层面建模屏蔽云厂商的差异，用户不需要感知云厂商，也不应该感知云厂商的存在，因为IaaS层应该可以随时从一个云迁移到另外一个云，只有具备这种能力，才具备与云厂商的议价权（企业用户折扣真的可以很大）</li>
+<li>每个云上都有产品，难道我们真的要每个产品都对应去建模，如果不建模该怎么办</li>
+<li>容器化大潮，如何相对统一的交付资源</li>
+</ol>
+<span id="more"></span>
+<h3 id="方案设计"><a href="#方案设计" class="headerlink" title="方案设计"></a>方案设计</h3><p><img src="/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/architecture.png" alt="architecture"></p>
+<p>通过抽象定义云资源模型，定义云资源模板，由自定义云资源CRD operator 将InstanceType中的tf模板填充，最终通过Terraform交付云资源。<br>在这个过程中，自定义云资源CRD operator需要做一定的概念转化工作，即把自己定义通用的模型转化为不同云厂商的模型， 因为tf模板定义了相同的输入输出，<br>所以自定义云资源CRD operator的代码是通用的，不需要对每个云做适配，只需要对自己的通用模型做一次适配就好（通用模型填充TF模板）。</p>
+<h4 id="TerraformController"><a href="#TerraformController" class="headerlink" title="TerraformController"></a>TerraformController</h4><p>使用 Terraform 去解决对接多云的麻烦，并且 Terraform 还具有让不同云厂商的资源描述输入和输出相对统一，但是Terraform本身是个Cli工具，所有可以用一个<br>开箱即用的开源程序<a href="https://github.com/kubevela/terraform-controller">TerraformController</a>去让它完美的云原生化</p>
+<p>该开源软件主要优势：</p>
+<ol>
+<li>具有 Terraform 完全能力，多云拓展方便</li>
+<li>Terraform 资源使用 kubernetes 接管，不需要再去关心Terraform的部署存储<a href="/Terraform%E7%AE%A1%E7%90%86%E4%BA%91%E8%B5%84%E6%BA%90%E5%AE%9E%E8%B7%B5.html" title="点击这里查看这篇文章">点击这里查看这篇文章</a></li>
+<li>统一资源为 configuration CRD</li>
+</ol>
+<h4 id="自定义云资源-K8s-CRD"><a href="#自定义云资源-K8s-CRD" class="headerlink" title="自定义云资源 K8s CRD"></a>自定义云资源 K8s CRD</h4><p>使用 K8s CRD 去定义自己的云资源，一套控制程序交付所有云资源</p>
+<p>例子：</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CloudResource</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">env:</span> <span class="string">qa</span></span><br><span class="line">    <span class="attr">idc:</span> <span class="string">qabb</span></span><br><span class="line">    <span class="attr">instance_name:</span> <span class="string">qabb-qa-test1</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">qabb-4a1fe56c-1a56-42f9-97ff-2ca779395861</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">components:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">idc:</span> <span class="string">qabb</span></span><br><span class="line">    <span class="attr">instance_name:</span> <span class="string">qabb-qa-test1</span></span><br><span class="line">    <span class="attr">instance_spec:</span> <span class="string">1c4g</span></span><br><span class="line">    <span class="attr">instance_type:</span> <span class="string">9b977623-d9e1-4a74-a667-2c68121593f1</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">cvm</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">data_disks:</span></span><br><span class="line">        <span class="attr">data_disk_287765:</span></span><br><span class="line">          <span class="attr">disk_type:</span> <span class="string">LOCAL_SSD</span></span><br><span class="line">          <span class="attr">size:</span> <span class="number">100</span></span><br><span class="line">      <span class="attr">image_id:</span> <span class="string">uimage-zxr3dye4</span></span><br><span class="line">      <span class="attr">os_type:</span> <span class="string">centos7</span></span><br><span class="line">      <span class="attr">sys_disk_size:</span> <span class="number">20</span></span><br><span class="line">      <span class="attr">sys_disk_type:</span> <span class="string">LOCAL_SSD</span></span><br><span class="line">    <span class="attr">sub_zone:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>idc： 机房，按照业务划分的逻辑机房，很多配置都会绑定此概念，比如vpc网段，机型，镜像等等</li>
+<li>instance_name： 实例名称</li>
+<li>instance_type： 实例类型，映射到云厂商的资源类型，后面又详细介绍</li>
+<li>instance_spec： 实例规格，映射到云厂商的实例的规格，后面又详细介绍</li>
+<li>name：组件名称</li>
+<li>sub_zone：子域，网络层面机房内划分的区域，可以对应一段子网</li>
+<li>type：组件类型</li>
+<li>properties： 一些非结构化动态参数</li>
+</ol>
+<p>以上就是通用云资源模型的定义，基本可以满足常用云资源的定义。</p>
+<h4 id="资源类型"><a href="#资源类型" class="headerlink" title="资源类型"></a>资源类型</h4><p>定义不同的云资源类型来应对不同的云厂商的不同的云资源</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">InstanceType</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">cloud:</span> <span class="string">ucloud</span></span><br><span class="line">    <span class="attr">disabled:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">definition:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">idc:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">idc1</span>  <span class="comment"># 运行使用此机型的机房</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">idc2</span></span><br><span class="line">  <span class="attr">instance_spec:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">cpu_num:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">    <span class="attr">mem_size:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">1c1g</span></span><br><span class="line">    <span class="attr">spec:</span> <span class="string">n-highcpu-1</span>  <span class="comment"># 一般对应值不用云厂商的规格描述，这也是一种屏蔽多云差异的手段</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">cvm</span></span><br></pre></td></tr></table></figure>
+
+<p>云资源模板<br>大多数情况下一种云的一种资源（比如云主机）定义一种模板就行了，但是由于一种云的一种资源可能有很多种机型，比如ucloud有N、O、OS等，所以抽象InstanceTypeDefinition复用</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">paas.youzan.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">InstanceTypeDefinition</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">cloud:</span> <span class="string">ucloud</span></span><br><span class="line">    <span class="attr">disabled:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">cvm</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">9b3677c8-186e-4812-9d83-040145dc9622</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">definition:</span> <span class="string">|-</span></span><br><span class="line"><span class="string">    terraform &#123;</span></span><br><span class="line"><span class="string">      required_providers &#123;</span></span><br><span class="line"><span class="string">        ucloud = &#123;</span></span><br><span class="line"><span class="string">          source = &quot;ucloud/ucloud&quot;</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">      &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    provider &quot;ucloud&quot; &#123;</span></span><br><span class="line"><span class="string">      base_url = &quot;http://api.service.ucloud.cn&quot;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_instance&quot; &quot;basic&quot; &#123;</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      image_id          = var.image_id</span></span><br><span class="line"><span class="string">      instance_type     = var.spec</span></span><br><span class="line"><span class="string">      root_password     = &quot;xxxx&quot;</span></span><br><span class="line"><span class="string">      name              = var.instance_name</span></span><br><span class="line"><span class="string">      charge_type = &quot;month&quot;</span></span><br><span class="line"><span class="string">      boot_disk_type    = var.sys_disk_type</span></span><br><span class="line"><span class="string">      boot_disk_size    = var.sys_disk_size</span></span><br><span class="line"><span class="string">      min_cpu_platform = &quot;Intel/Skylake&quot;</span></span><br><span class="line"><span class="string">      vpc_id = var.vpc_id</span></span><br><span class="line"><span class="string">      subnet_id = var.subnet_id</span></span><br><span class="line"><span class="string">      security_group = length(var.security_groups) &gt; 0 ? var.security_groups[0] : null</span></span><br><span class="line"><span class="string">      allow_stopping_for_update = true</span></span><br><span class="line"><span class="string">      delete_disks_with_instance = true</span></span><br><span class="line"><span class="string">      delete_eips_with_instance = true</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_disk&quot; &quot;storage&quot; &#123;</span></span><br><span class="line"><span class="string">      for_each          = var.data_disks</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      name              = each.key</span></span><br><span class="line"><span class="string">      disk_size         = each.value.size</span></span><br><span class="line"><span class="string">      disk_type          = each.value.disk_type</span></span><br><span class="line"><span class="string">      rdma_cluster_id = each.value.disk_type == &quot;rssd_data_disk&quot; ? ucloud_instance.basic.rdma_cluster_id : null</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    resource &quot;ucloud_disk_attachment&quot; &quot;default&quot; &#123;</span></span><br><span class="line"><span class="string">      count       = length(ucloud_disk.storage)</span></span><br><span class="line"><span class="string">      availability_zone = var.zone</span></span><br><span class="line"><span class="string">      disk_id  = element(values(ucloud_disk.storage)[*].id, count.index)</span></span><br><span class="line"><span class="string">      instance_id = ucloud_instance.basic.id</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;zone&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;ap-beijing-7&quot;</span></span><br><span class="line"><span class="string">      description = &quot;Availability Zone&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;instance_name&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;test_instance_name&quot;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Name&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;image_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Image Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;project_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;project Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;spec&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance spec&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;vpc_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Vpc Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;subnet_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Subnet Id&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;security_groups&quot; &#123;</span></span><br><span class="line"><span class="string">      type        = list(string)</span></span><br><span class="line"><span class="string">      description = &quot;Instance Security Groups&quot;</span></span><br><span class="line"><span class="string">      default     = []</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;sys_disk_type&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = &quot;CLOUD_PREMIUM&quot;</span></span><br><span class="line"><span class="string">      description = &quot;sys disk type&quot;</span></span><br><span class="line"><span class="string">      type        = string</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;sys_disk_size&quot; &#123;</span></span><br><span class="line"><span class="string">      default     = 20</span></span><br><span class="line"><span class="string">      description = &quot;sys disk size&quot;</span></span><br><span class="line"><span class="string">      type        = number</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    variable &quot;data_disks&quot; &#123;</span></span><br><span class="line"><span class="string">      type = map(object(&#123;</span></span><br><span class="line"><span class="string">        disk_type = string</span></span><br><span class="line"><span class="string">        size      = number</span></span><br><span class="line"><span class="string">      &#125;))</span></span><br><span class="line"><span class="string">      description = &quot;Instance Data Disks&quot;</span></span><br><span class="line"><span class="string">      default     = &#123;&#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;instance_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance ID&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.id</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;instance_ip&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Ip&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.private_ip</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;status&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Status&quot;</span></span><br><span class="line"><span class="string">      value       = ucloud_instance.basic.status</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_id&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk id&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.id if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_size&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk size&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.size if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;system_disk_type&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance sys disk type&quot;</span></span><br><span class="line"><span class="string">      value       =  [for d in ucloud_instance.basic.disk_set : d.type if d.is_boot == true][0]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    output &quot;data_disks&quot; &#123;</span></span><br><span class="line"><span class="string">      description = &quot;Instance Data Disks&quot;</span></span><br><span class="line"><span class="string">      value       = [for key, value in ucloud_disk.storage : &#123; &quot;$&#123;key&#125;&quot;: &#123;&quot;sn&quot;: value.id, &quot;disk_type&quot;: value.disk_type, &quot;size&quot;: value.disk_size&#125; &#125;]</span></span><br><span class="line"><span class="string">    &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>效果</p>
+<p><img src="/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E8%84%9A%E8%B8%8F%E5%A4%9A%E6%9C%B5%E4%BA%91/result.png" alt="img.png"></p>
+<ol>
+<li>对资源的控制非常简单，操作CR记录就可以达到效果，像机器的创建、销毁、扩容简直不要太简单，并且不用关心底层是什么云</li>
+<li>新资源的接入变成写写一份TF模板，除非非常不典型的资源需要少量开发</li>
+<li>接入新的云厂商也是手到擒来，毕竟在TerraformController里大的云厂商都对接好了，只需要编写新的TF模板和把对应云厂商的Provider打到Terraform镜像就行了<a href="https://github.com/oam-dev/docker-terraform">docker-terraform</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>Terraform</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+        <tag>运维自动化</tag>
+        <tag>Terraform</tag>
+        <tag>多云</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>开发一个MutatingWebhook</title>
+    <url>/%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AAMutatingWebhook.html</url>
+    <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Webhook就是一种HTTP回调，用于在某种情况下执行某些动作，Webhook不是K8S独有的，很多场景下都可以进行Webhook，比如在提交完代码后调用一个Webhook自动构建docker镜像</p>
+<p>准入 Webhook 是一种用于接收准入请求并对其进行处理的 HTTP 回调机制。 可以定义两种类型的准入 Webhook， 即验证性质的准入 Webhook 和变更性质的准入 Webhook。 变更性质的准入 Webhook 会先被调用。它们可以修改发送到 API 服务器的对象以执行自定义的设置默认值操作。</p>
+<p>在完成了所有对象修改并且 API 服务器也验证了所传入的对象之后， 验证性质的 Webhook 会被调用，并通过拒绝请求的方式来强制实施自定义的策略。</p>
+<p>Admission Webhook使用较多的场景如下</p>
+<ol>
+<li>在资源持久化到ETCD之前进行修改（Mutating Webhook），比如增加init Container或者sidecar Container</li>
+<li>在资源持久化到ETCD之前进行校验（Validating Webhook），不满足条件的资源直接拒绝并给出相应信息</li>
+</ol>
+<span id="more"></span>
+<p>组成</p>
+<ol>
+<li>webhook 服务</li>
+<li>webhook 配置</li>
+<li>webhook 证书</li>
+</ol>
+<h1 id="创建核心组件Pod的Webhook"><a href="#创建核心组件Pod的Webhook" class="headerlink" title="创建核心组件Pod的Webhook"></a>创建核心组件Pod的Webhook</h1><h2 id="使用kubebuilder新建webhook项目"><a href="#使用kubebuilder新建webhook项目" class="headerlink" title="使用kubebuilder新建webhook项目"></a>使用kubebuilder新建webhook项目</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">kubebuilder init --domain test.com --repo gitlab.qima-inc.com/test-operator</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(base) (⎈ |kubernetes-admin@qa-u03:qa)➜  test-operator kubebuilder init --domain test.com --repo gitlab.qima-inc.com/test-operator</span><br><span class="line">INFO Writing kustomize manifests for you to edit...</span><br><span class="line">INFO Writing scaffold for you to edit...</span><br><span class="line">INFO Get controller runtime:</span><br><span class="line">$ go get sigs.k8s.io/controller-runtime@v0.17.2</span><br><span class="line">INFO Update dependencies:</span><br><span class="line">$ go mod tidy</span><br><span class="line">go: go.mod file indicates go 1.21, but maximum version supported by tidy is 1.19</span><br><span class="line">Error: failed to initialize project: unable to run post-scaffold tasks of &quot;base.go.kubebuilder.io/v4&quot;: exit status 1</span><br></pre></td></tr></table></figure>
+<p>因为我默认是是go1.19所以版本达不到要求，这里两种处理方式</p>
+<ol>
+<li>指定 –plugins go&#x2F;v3 –project-version 3</li>
+<li>切换高版本golang 这里我切换了go1.22</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(base) (⎈ |kubernetes-admin@qa-u03:qa)➜  test-operator kubebuilder init --domain test.com --repo gitlab.qima-inc.com/test-operator                                    </span><br><span class="line">INFO Writing kustomize manifests for you to edit... </span><br><span class="line">INFO Writing scaffold for you to edit...          </span><br><span class="line">INFO Get controller runtime:</span><br><span class="line">$ go get sigs.k8s.io/controller-runtime@v0.17.2 </span><br><span class="line">INFO Update dependencies:</span><br><span class="line">$ go mod tidy           </span><br><span class="line">Next: define a resource with:</span><br><span class="line">$ kubebuilder create api</span><br></pre></td></tr></table></figure>
+
+<h2 id="生成核心组件Pod的API"><a href="#生成核心组件Pod的API" class="headerlink" title="生成核心组件Pod的API"></a>生成核心组件Pod的API</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(base) (⎈ |kubernetes-admin@qa-u03:qa)➜  test-operator kubebuilder create api --group core --version v1 --kind Pod                                                    </span><br><span class="line">INFO Create Resource [y/n]                        </span><br><span class="line">n</span><br><span class="line">INFO Create Controller [y/n]                      </span><br><span class="line">n</span><br><span class="line">INFO Writing kustomize manifests for you to edit... </span><br><span class="line">INFO Writing scaffold for you to edit...          </span><br><span class="line">INFO Update dependencies:</span><br><span class="line">$ go mod tidy        </span><br></pre></td></tr></table></figure>
+<p>这里有两个选项，创建资源和创建控制器<br>因为是内置资源Pod所以不需要创建资源，也不需要控制器<br>假如是自定义资源，需要创建资源，创建控制器</p>
+<h2 id="创建webhook"><a href="#创建webhook" class="headerlink" title="创建webhook"></a>创建webhook</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(base) (⎈ |kubernetes-admin@qa-u03:qa)➜  test-operator kubebuilder create webhook --group core --version v1 --kind Pod --defaulting --programmatic-validation</span><br><span class="line">INFO Writing kustomize manifests for you to edit... </span><br><span class="line">ERRO Unable to find the target(s) #- path: patches/webhook/* to uncomment in the file config/crd/kustomization.yaml. </span><br><span class="line">ERRO Unable to find the target(s) #configurations:</span><br><span class="line">#- kustomizeconfig.yaml to uncomment in the file config/crd/kustomization.yaml. </span><br><span class="line">INFO Writing scaffold for you to edit...          </span><br><span class="line">INFO api/v1/pod_webhook.go                        </span><br><span class="line">INFO api/v1/pod_webhook_test.go                   </span><br><span class="line">INFO api/v1/webhook_suite_test.go                 </span><br><span class="line">INFO Update dependencies:</span><br><span class="line">$ go mod tidy           </span><br><span class="line">INFO Running make:</span><br><span class="line">$ make generate                </span><br><span class="line">mkdir -p /Users/xxxx/test-operator/bin</span><br><span class="line">Downloading sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0</span><br><span class="line">/Users/xxxx/test-operator/bin/controller-gen-v0.14.0 object:headerFile=&quot;hack/boilerplate.go.txt&quot; paths=&quot;./...&quot;</span><br><span class="line">Next: implement your new Webhook and generate the manifests with:</span><br><span class="line">$ make manifests</span><br></pre></td></tr></table></figure>
+
+<p>代码结构</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── Dockerfile</span><br><span class="line">├── Makefile</span><br><span class="line">├── PROJECT</span><br><span class="line">├── README.md</span><br><span class="line">├── api</span><br><span class="line">│   └── v1</span><br><span class="line">│       ├── pod_webhook.go</span><br><span class="line">│       ├── pod_webhook_test.go</span><br><span class="line">│       └── webhook_suite_test.go</span><br><span class="line">├── bin</span><br><span class="line">│   └── controller-gen-v0.14.0</span><br><span class="line">├── cmd</span><br><span class="line">│   └── main.go</span><br><span class="line">├── config</span><br><span class="line">│   ├── certmanager</span><br><span class="line">│   │   ├── certificate.yaml</span><br><span class="line">│   │   ├── kustomization.yaml</span><br><span class="line">│   │   └── kustomizeconfig.yaml</span><br><span class="line">│   ├── crd</span><br><span class="line">│   │   └── patches</span><br><span class="line">│   │       ├── cainjection_in_pods.yaml</span><br><span class="line">│   │       └── webhook_in_pods.yaml</span><br><span class="line">│   ├── default</span><br><span class="line">│   │   ├── kustomization.yaml</span><br><span class="line">│   │   ├── manager_auth_proxy_patch.yaml</span><br><span class="line">│   │   ├── manager_config_patch.yaml</span><br><span class="line">│   │   ├── manager_webhook_patch.yaml</span><br><span class="line">│   │   └── webhookcainjection_patch.yaml</span><br><span class="line">│   ├── manager</span><br><span class="line">│   │   ├── kustomization.yaml</span><br><span class="line">│   │   └── manager.yaml</span><br><span class="line">│   ├── prometheus</span><br><span class="line">│   │   ├── kustomization.yaml</span><br><span class="line">│   │   └── monitor.yaml</span><br><span class="line">│   ├── rbac</span><br><span class="line">│   │   ├── auth_proxy_client_clusterrole.yaml</span><br><span class="line">│   │   ├── auth_proxy_role.yaml</span><br><span class="line">│   │   ├── auth_proxy_role_binding.yaml</span><br><span class="line">│   │   ├── auth_proxy_service.yaml</span><br><span class="line">│   │   ├── kustomization.yaml</span><br><span class="line">│   │   ├── leader_election_role.yaml</span><br><span class="line">│   │   ├── leader_election_role_binding.yaml</span><br><span class="line">│   │   ├── role.yaml</span><br><span class="line">│   │   ├── role_binding.yaml</span><br><span class="line">│   │   └── service_account.yaml</span><br><span class="line">│   └── webhook</span><br><span class="line">│       ├── kustomization.yaml</span><br><span class="line">│       ├── kustomizeconfig.yaml</span><br><span class="line">│       ├── manifests.yaml</span><br><span class="line">│       └── service.yaml</span><br><span class="line">├── go.mod</span><br><span class="line">├── go.sum</span><br><span class="line">├── hack</span><br><span class="line">│   └── boilerplate.go.txt</span><br><span class="line">└── test</span><br><span class="line">├── e2e</span><br><span class="line">│   ├── e2e_suite_test.go</span><br><span class="line">│   └── e2e_test.go</span><br><span class="line">└── utils</span><br><span class="line">└── utils.go</span><br></pre></td></tr></table></figure>
+<h2 id="实现Webhook相关代码"><a href="#实现Webhook相关代码" class="headerlink" title="实现Webhook相关代码"></a>实现Webhook相关代码</h2><p>因为只有Webhook，没有Controller 所以只需要实现Webhook相关代码即可，同时需要注释掉一些代码如：<br>Dockerfile中的</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line"><span class="comment"># COPY internal/controller/ internal/controller/</span></span><br></pre></td></tr></table></figure>
+
+<p>修改api&#x2F;v1&#x2F;xxx_suite_test.go<br>因为核心组件Pod的Webhook和一般的CRD的webhook不一样，此处生成的pod_webhook.go只有Default()这个function，因此，我们需要直接重写整个代码，最重要的是Handle()方法。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Copyright 2024.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment">you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment">You may obtain a copy of the License at</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">    http://www.apache.org/licenses/LICENSE-2.0</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment">distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment">WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment">See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment">limitations under the License.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> v1</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;sigs.k8s.io/controller-runtime/pkg/client&quot;</span></span><br><span class="line">	logf <span class="string">&quot;sigs.k8s.io/controller-runtime/pkg/log&quot;</span></span><br><span class="line">	<span class="string">&quot;sigs.k8s.io/controller-runtime/pkg/webhook/admission&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// log is for logging in this package.</span></span><br><span class="line"><span class="keyword">var</span> podlog = logf.Log.WithName(<span class="string">&quot;pod-resource&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义核心组件pod的webhook的主struct，类似于java的Class</span></span><br><span class="line"><span class="keyword">type</span> PodWebhookMutate <span class="keyword">struct</span> &#123;</span><br><span class="line">	Client  client.Client</span><br><span class="line">	decoder *admission.Decoder</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// +kubebuilder:webhook:path=/mutate-core-v1-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups=core,resources=pods,verbs=create;update,versions=v1,name=mpod.kb.io,admissionReviewVersions=v1</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *PodWebhookMutate)</span> <span class="title">Handle</span><span class="params">(ctx context.Context, req admission.Request)</span> <span class="title">admission</span>.<span class="title">Response</span></span> &#123;</span><br><span class="line">	pod := &amp;corev1.Pod&#123;&#125;</span><br><span class="line">	err := a.decoder.Decode(req, pod)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> admission.Errored(http.StatusBadRequest, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> 变量marshaledPod是一个Map，可以直接修改pod的一些属性</span></span><br><span class="line">	marshaledPod, err := json.Marshal(pod)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> admission.Errored(http.StatusInternalServerError, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 打印</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;======================================================&quot;</span>)</span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(marshaledPod))</span><br><span class="line">	<span class="keyword">return</span> admission.PatchResponseFromRaw(req.Object.Raw, marshaledPod)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(a *PodWebhookMutate)</span> <span class="title">InjectDecoder</span><span class="params">(d *admission.Decoder)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	a.decoder = d</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改main.go文件：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> os.Getenv(<span class="string">&quot;ENABLE_WEBHOOKS&quot;</span>) != <span class="string">&quot;false&quot;</span> &#123;</span><br><span class="line">    <span class="comment">//if err = (&amp;corev1.Pod&#123;&#125;).SetupWebhookWithManager(mgr); err != nil &#123;</span></span><br><span class="line">    <span class="comment">//	setupLog.Error(err, &quot;unable to create webhook&quot;, &quot;webhook&quot;, &quot;Pod&quot;)</span></span><br><span class="line">    <span class="comment">//	os.Exit(1)</span></span><br><span class="line">    <span class="comment">//&#125;</span></span><br><span class="line">    mgr.GetWebhookServer().Register(<span class="string">&quot;/mutate-core-v1-pod&quot;</span>, &amp;webhook.Admission&#123;Handler: &amp;v1.PodWebhookMutate&#123;Client: mgr.GetClient()&#125;&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成mainfests</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">make manifests generate</span><br></pre></td></tr></table></figure>
+
+<h2 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h2><h3 id="手动签发证书"><a href="#手动签发证书" class="headerlink" title="手动签发证书"></a>手动签发证书</h3><p><a href="https://cuisongliu.github.io/2020/07/kubernetes/admission-webhook/">https://cuisongliu.github.io/2020/07/kubernetes/admission-webhook/</a></p>
+<h3 id="自动签发证书"><a href="#自动签发证书" class="headerlink" title="自动签发证书"></a>自动签发证书</h3><p>webhook 服务启动时自动生成证书，授权证书</p>
+<ol>
+<li>创建CA根证书以及服务的证书</li>
+<li>将服务端、CA证书写入 k8s Secret，并且支持find or create</li>
+<li>本地写入证书</li>
+<li>获取MutatingWebhookConfiguration和ValidatingWebhookConfiguration将caCert写入webhook config中的ClientConfig.CABundle（这里有个问题是webhook需要提前创建，CABundle可以写个临时值，等webhook server 启动覆盖）</li>
+</ol>
+<p>自动签发证书参考项目： <a href="https://github.com/koordinator-sh/koordinator/blob/main/pkg/webhook/util/controller/webhook_controller.go#L187">https://github.com/koordinator-sh/koordinator/blob/main/pkg/webhook/util/controller/webhook_controller.go#L187</a></p>
+]]></content>
+      <categories>
+        <category>Kubernetes</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>koordinator混部系统</title>
+    <url>/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F.html</url>
+    <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>官网： <a href="https://koordinator.sh/">https://koordinator.sh/</a></p>
+<p>koordinator 是一个基于 qos 的 kubernetes 混合工作负载调度系统。它旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 pod 部署密度以提高资源利用率。</p>
+<p><strong>文章基于</strong></p>
+<p>Koordinator版本： 1.0.0</p>
+<p>内核版本： Anolis-4.19.91-26.6</p>
+<span id="more"></span>
+
+<h3 id="两种关键机制"><a href="#两种关键机制" class="headerlink" title="两种关键机制"></a>两种关键机制</h3><ul>
+<li>QoS</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>QoS</th>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SYSTEM</td>
+<td>系统进程，资源受限</td>
+<td>对于 DaemonSets 等系统服务，虽然需要保证系统服务的延迟，但也需要限制节点上这些系统服务容器的资源使用，以确保其不占用过多的资源</td>
+</tr>
+<tr>
+<td>LSE(Latency Sensitive Exclusive)</td>
+<td>保留资源并组织同 QoS 的 pod 共享资源</td>
+<td>很少使用，常见于中间件类应用，一般在独立的资源池中使用 （不超卖）</td>
+</tr>
+<tr>
+<td>LSR(Latency Sensitive Reserved)</td>
+<td>预留资源以获得更好的确定性</td>
+<td>类似于社区的 Guaranteed，CPU 核被绑定 （不超卖）</td>
+</tr>
+<tr>
+<td>LS(Latency Sensitive)</td>
+<td>共享资源，对突发流量有更好的弹性</td>
+<td>微服务工作负载的典型QoS级别，实现更好的资源弹性和更灵活的资源调整能力</td>
+</tr>
+<tr>
+<td>BE(Best Effort)</td>
+<td>共享不包括 LSE 的资源，资源运行质量有限，甚至在极端情况下被杀死</td>
+<td>批量作业的典型 QoS 水平，在一定时期内稳定的计算吞吐量，低成本资源</td>
+</tr>
+</tbody></table>
+<ul>
+<li>优先级</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>PriorityClass</th>
+<th>优先级范围</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>koord-prod</td>
+<td>[9000, 9999]</td>
+<td>需要提前规划资源配额，并且保证在配额内成功。</td>
+</tr>
+<tr>
+<td>koord-mid</td>
+<td>[7000, 7099]</td>
+<td>需要提前规划资源配额，并且保证在配额内成功。</td>
+</tr>
+<tr>
+<td>koord-batch</td>
+<td>[5000, 5999]</td>
+<td>需要提前规划资源配额，一般允许借用配额。</td>
+</tr>
+<tr>
+<td>koord-free</td>
+<td>[3000, 3999]</td>
+<td>不保证资源配额，可分配的资源总量取决于集群的总闲置资源。</td>
+</tr>
+</tbody></table>
+<h3 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h3><p><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/architecture.png" alt="architecture"></p>
+<h3 id="调度能力"><a href="#调度能力" class="headerlink" title="调度能力"></a>调度能力</h3><h4 id="内核调度能力"><a href="#内核调度能力" class="headerlink" title="内核调度能力"></a>内核调度能力</h4><p><a href="https://help.aliyun.com/document_detail/155424.html">https://help.aliyun.com/document_detail/155424.html</a></p>
+<h4 id="单节点调度能力"><a href="#单节点调度能力" class="headerlink" title="单节点调度能力"></a>单节点调度能力</h4><h5 id="CPU-抑制"><a href="#CPU-抑制" class="headerlink" title="CPU 抑制"></a>CPU 抑制</h5><p>此特性适用于BE QoS的pod， 意思是只针对BE QoS的pod压缩CPU。</p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cpuSuppressPolicy</td>
+<td>支持cpuset和cpuQuota两种策略。cpuset策略对最终调整的是cgroup中的cpuset.cpus，cpuQuota测试最终调整的是cgroup中的cpu.cfs_quota_us。<br/>( <strong>这里可忽略：</strong> <em>当kubelet中cpu-manager-policy设置为static时，对于cpuset策略生效的是新计算的cpuset不和老的cpuset进行merge；</em> <em>当kubelet中的cpu-manager-policy不设置时， 对于cpuset策略生效的是新计算的cpuset和老的cpuset进行merge， 且为了避免cgroup上下级冲突，会做2次apply。</em> )<br/><strong>默认策略为：cpuset。</strong></td>
+<td>cpuset.cpus和cpu.cfs_quota_us<br/></td>
+<td>BE<br/></td>
+<td>Pod和Pod.Spec.Containers<br/></td>
+</tr>
+<tr>
+<td>cpuSuppressThresholdPercent</td>
+<td>用于计算BE的pods可以使用的cpu：<em>suppress(BE) :&#x3D; node.Status.Allocatable.Cpu()</em> cpuSuppressThresholdPercent - pod(LS).Used - system.Used*<br/>最终可用的cpu是与策略有关联： (这里可以理解为需要修正下上一步计算出来的值，让其尽量合理一点)* 当策略为cpuset时， 上一步计算出来的值还需要与LSR占用的cpu再做计算；* 当策略为cpuQuota时， 上一步计算出来的值还需要与node.Status.Capacity.Cpu()的上浮再做计算。<br/><strong>默认值为： 65。</strong></td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="CPU-Burst"><a href="#CPU-Burst" class="headerlink" title="CPU Burst"></a>CPU Burst</h5><p>此特性只适用于LS QoS的pod， 不适用于其他LSR、BE等QoS的pod。</p>
+<p><strong>CPU Burst和 CPU CFSQuota Burst策略在Koordinator中默认是不开启的。</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cpuBurstStrategy.cpuBurstPercent<br/></td>
+<td>对应的计算公式为： cpu.cfs_burst_us &#x3D; container.limit * burstCfg.CPUBurstPercent &#x2F; 100 * cfs_period_us。 即：cpu最多可以使用到几倍的cpu limits。<strong>注： 突发时最多可以使用多少cpu与平时空余的CPU资源有关， 具体可以看下面的参考文档。</strong><br/>启用策略参数为： auto或cpuBurstOnly<br/>参考文档：<a href="https://help.aliyun.com/document_detail/306980.html">https://help.aliyun.com/document_detail/306980.html</a></td>
+<td>cpu.cfs_burst_us</td>
+<td>LS</td>
+<td>Pod和Pod.Spec.Containers</td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.policy</td>
+<td>支持的策略类型： none、cpuBurstOnly、cfsQuotaBurstOnly、auto<br/>默认值： none</td>
+<td>-</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.sharePoolThresholdPercent</td>
+<td>当LS QoS的pod的实际cpu使用率大于此参数时， 则认为Node目前处于overload状态； 如果是overload状态， 则会影响下面pod在burst时使用的cfs_quota_us值， 即当node处于高负载时， 需要降低cpu burst的使用， 每次以0.8的倍数降低cfs_quota_us的值；当LS QoS的pod的实际cpu使用率小于0.9 * 此参数值是， 则认为Node处于idle状态； 如果是idle状态，且允许cpu burst的使用，每次以1.2的倍数提升cfs_quota_us的值；node的负载还有其他2种： cooling和unknown， cooling位于overload和idele之间；unknown是状态未知， 比如metrics指标没有采集上来等。<br/>默认值：50</td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.cfsQuotaBurstPercent</td>
+<td>对应的计算公式为： cpu.cfs_quota_us &#x3D; container.limit * cfsQuotaBurstPercent &#x2F; 100。<br/>burst限制器的容量为： cfsQuotaBurstPeriodSeconds * (cfsQuotaBurstPercent - 100)。 实际上计算方式同cfs_burst_us的方式， 都是过去一段时间空余的CPU资源有关。<br/>启用策略参数为： auto或cfsQuotaBurstOnly<br/>默认值：300</td>
+<td>cpu.cfs_quota_us</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuBurstStrategy.cfsQuotaBurstPeriodSeconds</td>
+<td>指定pod在burst时可以使用的最长的时间。<br/>默认：-1 (无限制)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="Memory-CGroup特性"><a href="#Memory-CGroup特性" class="headerlink" title="Memory CGroup特性"></a>Memory CGroup特性</h5><table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>memoryQOS.wmarkRatio<br/></td>
+<td>该接口用于设置是否启用memcg后台异步回收功能，以及设置异步回收功能开始工作的memcg内存水位线。单位是相对于memcg limit的百分之几。取值范围：0~100* 默认值为0，该值也表示禁用memcg后台异步回收功能。* 取值为非0时，表示开启memcg后台异步回收功能并设置对应的水位线。<strong>推荐值: 95</strong><br/>memory.wmark_high &#x3D; memory.limit_in_bytes * memory.wmark_ratio &#x2F; 100)<strong>当memcg内存使用超过该接口的值时，后台异步回收功能启动</strong><br/>参考文档：<a href="https://help.aliyun.com/document_detail/169535.html">https://help.aliyun.com/document_detail/169535.html</a></td>
+<td>memory.wmark_ratio<br/></td>
+<td>LSR&#x2F;LS&#x2F;BE</td>
+<td>Pod和Pod.Spec.Containers<br/></td>
+</tr>
+<tr>
+<td>memoryQOS.wmarkScalePermill</td>
+<td>该接口用于控制memory.wmark_high和memory.wmark_low之间的间隔。单位是相对于memcg limit的万分之几。取值范围：1~1000* 该接口在创建时，会继承父组的值（该值为50），该值也是默认值，即memcg limit的千分之五。* memcg根组目录不存在该接口文件。<strong>推荐值: 20</strong><br/>memory.wmark_low &#x3D; memory.wmark_high - memory.limit_in_bytes * memory.wmark_scale_factor &#x2F; 10000<strong>当memcg内存使用低于该接口的值时，后台异步回收结束</strong><br/>参考文档：<a href="https://help.aliyun.com/document_detail/169535.html">https://help.aliyun.com/document_detail/169535.html</a></td>
+<td>memory.wmark_scale_factor</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.wmarkMinAdj</td>
+<td>表示基于全局最低水位线（global wmark_min）所作出的调整（adjustment）百分比。取值范围：-25 ~ 50，取值范围说明如下：* 该接口创建时，继承父组的值（值为0），即默认值为0。* 负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）* 负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）* 当偏移后的global wmark_min被触发后，会执行抑制操作，抑制操作的时间和超出的内存使用为线性比例关系。抑制时间的取值范围：1ms ~ 1000ms。<br/><strong>负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）；****负值也表示global wmark_min下移，即提高时延敏感型业务的内存子系统服务质量（memcg QoS）</strong><br/>参考文档： <a href="https://help.aliyun.com/document_detail/169537.html">https://help.aliyun.com/document_detail/169537.html</a><br/></td>
+<td>memory.wmark_min_adj</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.priorityEnable</td>
+<td>该接口用于设置是否启用memcg OOM优先级策略功能，取值为0或者1。该接口不会继承，默认值为0。* 取值为0时，表示禁用memcg OOM优先级策略功能。* 取值为1时，表示开启memcgOOM优先级策略功能。<br/>参考文档： <a href="https://help.aliyun.com/document_detail/435534.html">https://help.aliyun.com/document_detail/435534.html</a></td>
+<td>memory.use_priority_oom</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.priority</td>
+<td>该接口提供13个级别的memcg优先级以支持不同重要程度的业务。取值范围为0~12，数值越大表示优先级越高。该接口不会继承，默认值为0。<em><strong>实现一定程度的内存QoS，此处需要说明的优先级值非全局变量，只能在同父cgroup下的兄弟节点进行比较。</strong></em> 对于优先级相等的兄弟节点来说，会按照组的内存使用量来排序选择内存使用最大的进行OOM操作。<br/>参考文档： <a href="https://help.aliyun.com/document_detail/435534.html">https://help.aliyun.com/document_detail/435534.html</a></td>
+<td>memory.priority</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.oomKillGroup</td>
+<td>&lt;TODO: 还没找到说明文档&gt;</td>
+<td>memory.oom.group</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.minLimitPercent</td>
+<td>绝对锁定内存，即使系统没有可回收的内存，也不会回收该接口锁定的内存。<br/>memory.min &#x3D; resources.Requests.Memory() * minLimitPercent &#x2F; 100(BE的计算也是类似，取的requests值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.min</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.lowLimitPercent</td>
+<td>相对锁定内存，如果系统没有其他可回收的内存，该接口锁定的内存也会被回收一部分。<br/>memory.min &#x3D; resources.Requests.Memory() * lowLimitPercent &#x2F; 100(BE的计算也是类似，取的requests值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.low<br/></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryQOS.throttlingPercent</td>
+<td>限制memcg的内存使用。<br/>memory.high &#x3D; resources.Limits.Memory() * throttlingPercent &#x2F; 100(BE的计算也是类似，取的limits值为： kubernetes.io&#x2F;batch-memory)<br/>参考文档： <a href="https://help.aliyun.com/document_detail/169536.html">https://help.aliyun.com/document_detail/169536.html</a></td>
+<td>memory.high</td>
+<td>Pod.Spec.Container<br/></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="CPU-amp-Memory-Evict特性"><a href="#CPU-amp-Memory-Evict特性" class="headerlink" title="CPU&amp;Memory Evict特性"></a>CPU&amp;Memory Evict特性</h5><p>此特性适用于BE QoS的pod， 意思是只对BE QoS的pod进行驱逐。</p>
+<table>
+<thead>
+<tr>
+<th><strong>分类</strong></th>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>对应的cgroup参数名</th>
+<th>适用的QoS</th>
+<th><strong>影响范围</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CPU Evict</strong></td>
+<td>args.cpu-evict-cool-time-seconds</td>
+<td>cpu驱逐的冷却周期， 默认是20s.</td>
+<td>-</td>
+<td>BE</td>
+<td>Node</td>
+</tr>
+<tr>
+<td>cpuEvictTimeWindowSeconds</td>
+<td>查询BE类Pod的cpu利用率的时间段。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuEvictBESatisfactionLowerPercent</td>
+<td>计算公式为：BE类Pod的 CPURealLimit&#x2F;CPURequest。根据上述公式计算出来的cpu百分比高于这个值， 则不发生pod的驱逐动作。<br/>合法值为：(0-60]</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cpuEvictBESatisfactionUpperPercent</td>
+<td>计算公式为： cpuEvictBESatisfactionUpperPercent - 上个表格中计算出来的cpu比率。<br/>合法值为：(0-100]</td>
+<td>-<br/></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Memory Evict</strong></td>
+<td>args.memory-evict-cool-time-seconds</td>
+<td>memory驱逐的冷却周期， 默认为4s.</td>
+<td>-</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryEvictThresholdPercent<br/></td>
+<td>内存驱逐阈值百分比。 计算是否超过这个阈值： A&#x3D;MemoryUsed(不包含cache)&#x2F; node memoryCapacity，当超过这个阈值后， 需要释放的内存为： node memoryCapacity * (A - memoryEvictLowerPercent)  &#x2F; 100<br/>默认值为： 70。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>memoryEvictLowerPercent</td>
+<td>内存占用(不包含cache)的安全线百分比。<br/>默认值为： memoryEvictThresholdPercent - 2 &#x3D; 68。</td>
+<td>-</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h5 id="通用调度能力"><a href="#通用调度能力" class="headerlink" title="通用调度能力"></a>通用调度能力</h5><p>此调度策略只适用于LSE、LSR并且priorityClass为koord-prod并且是Guaranted的pod(cpu和memory也必须是整数)。 Pod中的所有container也都需要是Guaranted的。<br><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/schedule.png" alt="architecture"></p>
+<table>
+<thead>
+<tr>
+<th><strong>Koordinator的参数名</strong></th>
+<th><strong>参数说明</strong></th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>args.node-topology-sync-interval</td>
+<td>koordlet上报node topology的间隔。</td>
+<td>3s</td>
+</tr>
+<tr>
+<td>scheduling.koordinator.sh&#x2F;resource-spec</td>
+<td>位于pod的annotations中，支持preferredCPUBindPolicy、preferredCPUExclusivePolicy策略。其中preferredCPUBindPolicy可以设置的值有：* Default (默认策略)* FullPCPUs，申请的cpu分配到同一个物理核上<em><em>SpreadByPCPUs</em> ，申请的cpu分配到不同物理核上，即打散到不同的核上</em><em>ConstrainedBurst</em> ，其中preferredCPUExclusivePolicy可以设置的值有：* None， 没有排他策略* PCPULevel， 同一个物理核互斥(pod间)* NUMANodeLevel，同一个NUMA Node互斥(pod间)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>scoringStrategy</td>
+<td>位于scheduler config中，可以设置的值有：* MostAllocated (默认)，打分逻辑为： (requestCPUs * 100) &#x2F; freeCPUs<strong>BalancedAllocation</strong> LeastAllocated，打分逻辑为：(freeCPUs - requestCPUs) * 100 &#x2F; freeCPUs最终的分数会在这个区间： [0, 32.23]</td>
+<td>-</td>
+</tr>
+<tr>
+<td>node.koordinator.sh&#x2F;cpu-bind-policy</td>
+<td>位于node的labels中， 可以设置的值有：* FullPCPUsOnly， 需要pod申请的cpu核数%(一个物理核有多少个逻辑核)&#x3D;&#x3D;0并且pod的bind策略需要为FullPCPUs。 当kubelet的cpu option策略为full-pcpus-only时，也需要满足前面的条件。</td>
+<td>-</td>
+</tr>
+<tr>
+<td>node.koordinator.sh&#x2F;numa-allocate-strategy</td>
+<td>位于node的labels中，可以设置的值有：* MostAllocated(默认)，* LeastAllocated*<em>DistributeEvenly</em><br/><strong>注，也可以在scheduler config中设置打分类型(限MostAllocated和LeastAllocated)，node label上的优先级更高</strong></td>
+<td>-</td>
+</tr>
+</tbody></table>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><h3 id="实验描述"><a href="#实验描述" class="headerlink" title="实验描述"></a>实验描述</h3><p>将在线业务和离线业务混部在同一台node上，通过在线业务90指标，来量化混部效果，比较普通混部、Koordinator混部和Koordinator混部绑核策略在单节点离线利用率逐步增加情况下的性能表现。</p>
+<ul>
+<li>普通混部：混跑在线和离线，使用当前生产环境一样配置的节点</li>
+<li>Koordinator混部：混跑在线和离线，离线BE</li>
+<li>Koordinator混部绑核：混跑在线和离线，在线启用CPU绑核，离线BE</li>
+</ul>
+<p>在线业务压测命令<br><code>wrk -t16 -c50 -d180s --latency &quot;http://10.215.113.57:8080/calculate&quot;</code></p>
+<p><strong>以下所有实验内容均是社区默认配置，除cpu的绑核策略</strong></p>
+<h3 id="模拟应用"><a href="#模拟应用" class="headerlink" title="模拟应用"></a>模拟应用</h3><h4 id="在线业务"><a href="#在线业务" class="headerlink" title="在线业务"></a>在线业务</h4><p>8c16g  go 1.17</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">qa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">progressDeadlineSeconds:</span> <span class="number">600</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">revisionHistoryLimit:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">rollingUpdate:</span></span><br><span class="line">      <span class="attr">maxSurge:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line">      <span class="attr">maxUnavailable:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">RollingUpdate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">online-service-mock</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">online-service-mock</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">leason001/online-mock:v1.0.0</span></span><br><span class="line">        <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">online-service</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">&quot;8&quot;</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">16000Mi</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">&quot;8&quot;</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">16000Mi</span></span><br><span class="line">        <span class="attr">terminationMessagePath:</span> <span class="string">/dev/termination-log</span></span><br><span class="line">        <span class="attr">terminationMessagePolicy:</span> <span class="string">File</span></span><br><span class="line">      <span class="attr">dnsPolicy:</span> <span class="string">ClusterFirst</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">koordinator:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Always</span></span><br><span class="line">      <span class="attr">securityContext:</span> &#123;&#125;</span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="离线业务"><a href="#离线业务" class="headerlink" title="离线业务"></a>离线业务</h4><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">offline-job</span></span><br><span class="line">        <span class="attr">colocation-profile-job:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">        <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">koordinator:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">offline-job</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">harbor.qima-inc.com/lisen/bigdata-test7</span></span><br><span class="line">        <span class="attr">args:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">--maxConcurrency=20</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">--maxFile=20</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">limits:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">2000m</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">&quot;4000Mi&quot;</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">cpu:</span> <span class="string">500m</span></span><br><span class="line">            <span class="attr">memory:</span> <span class="string">&quot;500Mi&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><p>Koordinator版本： 1.0.0<br>kubernetes：v1.21.7<br>Node 节点 48c 可分配cpu 47c</p>
+<h4 id="混部配置"><a href="#混部配置" class="headerlink" title="混部配置"></a>混部配置</h4><h5 id="Job（BE-koord-batch）"><a href="#Job（BE-koord-batch）" class="headerlink" title="Job（BE + koord-batch）"></a>Job（BE + koord-batch）</h5><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-job</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-job:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">BE</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-batch</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">5000</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="L1Web-（LSR-koord-prod）"><a href="#L1Web-（LSR-koord-prod）" class="headerlink" title="L1Web （LSR + koord-prod）"></a>L1Web （LSR + koord-prod）</h5><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-l1web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-l1web:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">LSR</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-prod</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">9100</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">    <span class="attr">scheduling.koordinator.sh/resource-spec:</span> <span class="string">&#x27;&#123;&quot;preferredCPUBindPolicy&quot;: &quot;SpreadByPCPUs&quot;&#125;&#x27;</span>  <span class="comment"># 根据node特性选择绑核策略 SpreadByPCPUs</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="L2L3Web-（LS-koord-mid）"><a href="#L2L3Web-（LS-koord-mid）" class="headerlink" title="L2L3Web （LS + koord-mid）"></a>L2L3Web （LS + koord-mid）</h5><figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">config.koordinator.sh/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterColocationProfile</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">colocation-profile-l2l3web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">namespaceSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">koordinator.sh/enable-colocation:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">      <span class="attr">colocation-profile-l2l3web:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">qosClass:</span> <span class="string">LS</span></span><br><span class="line">  <span class="attr">priorityClassName:</span> <span class="string">koord-mid</span></span><br><span class="line">  <span class="attr">koordinatorPriority:</span> <span class="number">7010</span></span><br><span class="line">  <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">koordinator.sh/mutated:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">koordinator.sh/intercepted:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">  <span class="attr">patch:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line">      <span class="attr">schedulerName:</span> <span class="string">koord-scheduler</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="实验数据"><a href="#实验数据" class="headerlink" title="实验数据"></a>实验数据</h3><table>
+<thead>
+<tr>
+<th>混部类型&#x2F;离线c</th>
+<th>30c</th>
+<th>20c</th>
+<th>10c</th>
+<th>4c</th>
+<th>0c</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>普通混部</td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   550.15ms  271.17ms   1.93s    69.42%Req&#x2F;Sec     6.66      4.28    30.00     84.42%Latency Distribution50%  510.34ms75%  703.47ms90%  917.68ms99%    1.35s15862 requests in 3.00m, 2.07MB readSocket errors: connect 0, read 0, write 0, timeout 3Requests&#x2F;sec:     88.08Transfer&#x2F;sec:     11.78KB</td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   327.40ms  159.32ms   1.46s    70.45%Req&#x2F;Sec    10.17      5.40    40.00     63.90%Latency Distribution50%  299.65ms75%  415.49ms90%  539.98ms99%  821.18ms26711 requests in 3.00m, 3.49MB readRequests&#x2F;sec:    148.31Transfer&#x2F;sec:     19.84KB</td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   226.89ms  110.28ms   1.08s    70.81%Req&#x2F;Sec    13.99      6.77    40.00     85.58%Latency Distribution50%  205.64ms75%  286.30ms90%  374.23ms99%  569.52ms38593 requests in 3.00m, 5.04MB readRequests&#x2F;sec:    214.29Transfer&#x2F;sec:     28.67KB</td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   184.88ms   87.04ms 776.84ms   71.34%Req&#x2F;Sec    16.82      7.66    50.00     64.93%Latency Distribution50%  167.91ms75%  230.62ms90%  300.64ms99%  458.58ms47324 requests in 3.00m, 6.18MB readRequests&#x2F;sec:    262.76Transfer&#x2F;sec:     35.15K</td>
+<td>Running 3m test @ <a href="http://10.215.113.55:8080/calculate16">http://10.215.113.55:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   178.73ms   83.51ms 879.17ms   70.78%Req&#x2F;Sec    17.31      7.72    50.00     64.96%Latency Distribution50%  162.46ms75%  222.69ms90%  291.30ms99%  438.10ms48909 requests in 3.00m, 6.39MB readRequests&#x2F;sec:    271.58Transfer&#x2F;sec:     36.33KB</td>
+</tr>
+<tr>
+<td>koordinator混部<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   214.49ms  119.05ms   1.99s    78.36%Req&#x2F;Sec    14.74      7.13    50.00     84.39%Latency Distribution50%  191.36ms75%  267.01ms90%  353.57ms99%  564.37ms40763 requests in 3.00m, 5.33MB readSocket errors: connect 0, read 0, write 0, timeout 40Requests&#x2F;sec:    226.39Transfer&#x2F;sec:     30.29KB<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   208.99ms  113.97ms   1.77s    77.09%Req&#x2F;Sec    15.14      7.25    50.00     84.29%Latency Distribution50%  186.23ms75%  260.93ms90%  346.60ms99%  566.10ms42035 requests in 3.00m, 5.49MB readSocket errors: connect 0, read 0, write 0, timeout 29Requests&#x2F;sec:    233.44Transfer&#x2F;sec:     31.23KB<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   194.99ms  111.34ms   1.98s    82.42%Req&#x2F;Sec    16.17      7.48    50.00     83.00%Latency Distribution50%  173.24ms75%  239.56ms90%  315.61ms99%  518.29ms45274 requests in 3.00m, 5.92MB readSocket errors: connect 0, read 0, write 0, timeout 25Requests&#x2F;sec:    251.40Transfer&#x2F;sec:     33.63KB<br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.162:8080/calculate16">http://10.215.113.162:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   180.80ms   94.63ms   2.00s    78.18%Req&#x2F;Sec    17.21      7.80    50.00     63.62%Latency Distribution50%  162.15ms75%  223.27ms90%  293.00ms99%  461.81ms48506 requests in 3.00m, 6.34MB readSocket errors: connect 0, read 0, write 0, timeout 23Requests&#x2F;sec:    269.31Transfer&#x2F;sec:     36.03KB<br/><br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   177.73ms   97.08ms   1.92s    82.06%Req&#x2F;Sec    17.55      7.78    50.00     64.91%Latency Distribution50%  159.45ms75%  216.63ms90%  283.87ms99%  459.59ms49562 requests in 3.00m, 6.48MB readSocket errors: connect 0, read 0, write 0, timeout 21Requests&#x2F;sec:    275.21Transfer&#x2F;sec:     36.82KB<br/></td>
+</tr>
+<tr>
+<td>koordinato绑核混部（FullPCPUs）<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   334.07ms  193.41ms   1.95s    70.73%Req&#x2F;Sec    10.23      5.68    40.00     60.90%Latency Distribution50%  296.62ms75%  435.18ms90%  587.64ms99%  947.87ms26279 requests in 3.00m, 3.43MB readSocket errors: connect 0, read 0, write 0, timeout 44Requests&#x2F;sec:    145.91Transfer&#x2F;sec:     19.52KB<br/><br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   324.44ms  180.21ms   1.94s    70.08%Req&#x2F;Sec    10.45      5.76    40.00     61.67%Latency Distribution50%  290.98ms75%  420.13ms90%  560.88ms99%  886.12ms27007 requests in 3.00m, 3.53MB readSocket errors: connect 0, read 0, write 0, timeout 30Requests&#x2F;sec:    149.95Transfer&#x2F;sec:     20.06KB<br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   304.60ms  168.88ms   1.87s    69.71%Req&#x2F;Sec    11.06      5.97    40.00     59.44%Latency Distribution50%  272.04ms75%  395.56ms90%  530.16ms99%  825.95ms28942 requests in 3.00m, 3.78MB readSocket errors: connect 0, read 0, write 0, timeout 12Requests&#x2F;sec:    160.71Transfer&#x2F;sec:     21.50KB<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.57:8080/calculate16">http://10.215.113.57:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   300.00ms  168.00ms   1.95s    69.55%Req&#x2F;Sec    11.23      6.04    40.00     59.29%Latency Distribution50%  267.87ms75%  390.71ms90%  525.82ms99%  823.77ms29441 requests in 3.00m, 3.85MB readSocket errors: connect 0, read 0, write 0, timeout 6Requests&#x2F;sec:    163.48Transfer&#x2F;sec:     21.87KB<br/><br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   297.46ms  168.29ms   2.00s    70.14%Req&#x2F;Sec    11.31      6.12    40.00     59.13%Latency Distribution50%  265.11ms75%  386.61ms90%  520.25ms99%  818.87ms29682 requests in 3.00m, 3.88MB readSocket errors: connect 0, read 0, write 0, timeout 13Requests&#x2F;sec:    164.84Transfer&#x2F;sec:     22.05KB<br/><br/></td>
+</tr>
+<tr>
+<td>koordinato绑核混部（SpreadByPCPUs）<br/></td>
+<td><br/>Running 3m test @ <a href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   194.52ms  114.30ms   1.95s    81.00%Req&#x2F;Sec    15.72      7.50    50.00     83.11%Latency Distribution50%  171.13ms75%  243.02ms90%  323.14ms99%  531.73ms43860 requests in 3.00m, 5.73MB readSocket errors: connect 0, read 0, write 0, timeout 100Requests&#x2F;sec:    243.53Transfer&#x2F;sec:     32.58KB<br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   191.38ms  109.22ms   2.00s    79.18%Req&#x2F;Sec    16.01      7.51    50.00     83.32%Latency Distribution50%  170.16ms75%  239.36ms90%  316.34ms99%  512.58ms44693 requests in 3.00m, 5.84MB readSocket errors: connect 0, read 0, write 0, timeout 96Requests&#x2F;sec:    248.16Transfer&#x2F;sec:     33.20KB<br/><br/></td>
+<td>Running 3m test @ <a href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   188.50ms  104.60ms   1.87s    77.21%Req&#x2F;Sec    16.37      7.68    50.00     82.00%Latency Distribution50%  168.07ms75%  235.71ms90%  311.15ms99%  503.77ms45843 requests in 3.00m, 5.99MB readSocket errors: connect 0, read 0, write 0, timeout 64Requests&#x2F;sec:    254.55Transfer&#x2F;sec:     34.06KB</td>
+<td>Running 3m test @ <a href="http://10.215.113.158:8080/calculate16">http://10.215.113.158:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   178.62ms   97.61ms   1.95s    77.72%Req&#x2F;Sec    17.34      7.86    50.00     64.61%Latency Distribution50%  160.77ms75%  222.73ms90%  290.30ms99%  461.97ms48916 requests in 3.00m, 6.39MB readSocket errors: connect 0, read 0, write 0, timeout 39Requests&#x2F;sec:    271.60Transfer&#x2F;sec:     36.34KB</td>
+<td>Running 3m test @ <a href="http://10.215.113.18:8080/calculate16">http://10.215.113.18:8080/calculate16</a> threads and 50 connectionsThread Stats   Avg      Stdev     Max   +&#x2F;- StdevLatency   180.97ms  116.46ms   1.95s    87.90%Req&#x2F;Sec    17.45      7.98    60.00     63.67%Latency Distribution50%  158.60ms75%  222.45ms90%  296.19ms99%  514.42ms49165 requests in 3.00m, 6.42MB readSocket errors: connect 0, read 0, write 0, timeout 37Requests&#x2F;sec:    273.00Transfer&#x2F;sec:     36.53KB</td>
+</tr>
+</tbody></table>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p><img src="/Koordinator%E6%B7%B7%E9%83%A8%E7%B3%BB%E7%BB%9F/result.png" alt="architecture"></p>
+<ol>
+<li>普通混部在线业务的RT随着cpu使用率的上涨明显升高</li>
+<li>koordinator混部在线业务的RT随着cpu使用率的上涨有一点点升高单，单基本可控</li>
+<li>koordinator绑核混部在线业务的RT基本不受cpu使用率的上涨影响</li>
+<li>超线程机器的绑核策略打散物理核效果更好</li>
+</ol>
+]]></content>
+      <categories>
+        <category>混部</category>
+      </categories>
+      <tags>
+        <tag>云原生</tag>
+        <tag>Kubernetes</tag>
+        <tag>混部</tag>
+        <tag>koordinator</tag>
+      </tags>
+  </entry>
+</search>

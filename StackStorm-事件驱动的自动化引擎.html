@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941" crossorigin="anonymous"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/avatar.jpeg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/avatar.jpeg">
+  <link rel="mask-icon" href="/images/avatar.jpeg" color="#222">
+  <meta name="google-site-verification" content="EKetkcQ0dzMReT-fhICBCc1eBTh3FLcFgh6gLTmp6pw">
+  <meta name="baidu-site-verification" content="codeva-DU6BjsezSk">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"leason.top","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false,"b2t":false,"scrollpercent":true},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":null,"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概念StackStorm是一个功能强大的开源自动化平台，可将所有应用程序，服务和工作流程连接起来。 它具有可扩展性，灵活性, 设计中包含了对DevOps和ChatOps的热爱。它可以将您现有的基础架构和应用程序环境联系在一起，以便您可以更轻松地自动化操作该环境。它特别专注于针对事件采取行动。  便利的故障排除 - 触发由监控系统捕获的系统故障，在物理节点、OpenStack或Amazon实例和应用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="StackStorm(事件驱动的自动化引擎)">
+<meta property="og:url" content="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E.html">
+<meta property="og:site_name" content="Leason">
+<meta property="og:description" content="概念StackStorm是一个功能强大的开源自动化平台，可将所有应用程序，服务和工作流程连接起来。 它具有可扩展性，灵活性, 设计中包含了对DevOps和ChatOps的热爱。它可以将您现有的基础架构和应用程序环境联系在一起，以便您可以更轻松地自动化操作该环境。它特别专注于针对事件采取行动。  便利的故障排除 - 触发由监控系统捕获的系统故障，在物理节点、OpenStack或Amazon实例和应用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/overview.png">
+<meta property="og:image" content="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/workflow.png">
+<meta property="og:image" content="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/pack.png">
+<meta property="article:published_time" content="2021-02-25T12:57:38.000Z">
+<meta property="article:modified_time" content="2025-01-09T07:42:54.455Z">
+<meta property="article:author" content="leason">
+<meta property="article:tag" content="运维自动化">
+<meta property="article:tag" content="StackStorm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/overview.png">
+
+<link rel="canonical" href="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>StackStorm(事件驱动的自动化引擎) | Leason</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e616a81d6078fbbb42d683fb72a3ce3f";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Leason</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">腹有诗书气自华</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="leason">
+      <meta itemprop="description" content="运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Leason">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          StackStorm(事件驱动的自动化引擎)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-25 20:57:38" itemprop="dateCreated datePublished" datetime="2021-02-25T20:57:38+08:00">2021-02-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-09 15:42:54" itemprop="dateModified" datetime="2025-01-09T15:42:54+08:00">2025-01-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/StackStorm/" itemprop="url" rel="index"><span itemprop="name">StackStorm</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+      
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block; text-align:center;"
+     data-ad-layout="in-article"
+     data-ad-format="fluid"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="6313778550"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>StackStorm是一个功能强大的开源自动化平台，可将所有应用程序，服务和工作流程连接起来。 它具有可扩展性，灵活性, 设计中包含了对DevOps和ChatOps的热爱。它可以将您现有的基础架构和应用程序环境联系在一起，以便您可以更轻松地自动化操作该环境。它特别专注于针对事件采取行动。</p>
+<ul>
+<li><p>便利的故障排除 - 触发由监控系统捕获的系统故障，在物理节点、OpenStack或Amazon实例和应用程序组件上运行一系列诊断检查，并将结果发布到共享通信环境中，如HipChat或JIRA。</p>
+</li>
+<li><p>自动修复 - 识别和验证OpenStack计算节点上的硬件故障，正确隔离实例并向管理员发送关于潜在停机时间的电子邮件，但如果出现任何问题 - 暂停工作流程并呼叫人员。</p>
+</li>
+<li><p>持续部署 - 与Jenkins一起构建和测试，配置新的AWS群集，基于NewRelic的应用程序性能数据，打开负载均衡器的一些流量，以及前滚或回滚</p>
+</li>
+</ul>
+<span id="more"></span>
+
+<p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/overview.png" alt="overview"></p>
+<h4 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h4><ul>
+<li>Sensors是用于分别接收或监视事件的入站或出站集成的Python插件。 当来自外部系统的事件发生并由传感器处理时，StackStorm触发器将发射到系统中。</li>
+<li>Triggers是外部事件的StackStorm表示形式。 有通用触发器（例如定时器，webhooks）和集成触发器（例如，Sensu告警，JIRA问题更新）。 通过编写传感器插件可以定义新的触发器类型。</li>
+<li>Actions是StackStorm出站集成。 有通用动作（ssh，REST调用），集成（OpenStack，Docker，Puppet）或自定义操作。 动作是Python插件或任何脚本，通过添加几行元数据将其消耗到StackStorm中。 动作可以由用户通过CLI或API直接调用，或者作为规则和工作流程的一部分使用和调用。</li>
+<li>Rules将触发器映射到动作（或工作流），应用匹配条件并将触发器加载到动作输入中。</li>
+<li>Workflows将动作拼接成“超级Actions”，定义顺序，转换条件以及传递数据。 大多数自动化不止一步，因此需要多个动     作。 工作流就像“原子”动作一样，可在Action库中使用，并且可以手动调用或由规则触发。</li>
+<li>Packs是内容部署的单位。 它们通过对集成（触发器和动作）和自动化（规则和工作流）进行分组，简化了StackStorm可插拔内容的管理和共享。 StackStorm Exchange上有越来越多的包可用。 用户可以创建自己的包，在Github上共享它们，或者提交给StackStorm Exchange.</li>
+</ul>
+<h4 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h4><p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/workflow.png" alt="workflow"></p>
+<ol>
+<li>从各个服务系统通过push或pull的方式把event传给sensors</li>
+<li>sensors会产生一个trigger到规则配置中查询该trigger对应的动作或者工作流</li>
+<li>将来自工作流的Action发送到消息队列（内置rabbitmq）中Actions到达外部的系统后就执行相应的动作</li>
+<li>日志和审计历史被推送到数据库进行存储（Mongodb）</li>
+</ol>
+<h3 id="Sensors"><a href="#Sensors" class="headerlink" title="Sensors"></a>Sensors</h3><p>传感器是将外部系统和事件与StackStorm集成的一种方式。传感器是一段Python代码，它们要么定期轮询某些外部系统，要么被动地等待入站事件。</p>
+<p>SampleSensor Yaml:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">class_name: &quot;SampleSensor&quot;</span><br><span class="line">entry_point: &quot;sample_sensor.py&quot;</span><br><span class="line">description: &quot;Sample sensor that emits triggers.&quot;</span><br><span class="line">trigger_types:</span><br><span class="line">  -</span><br><span class="line">    name: &quot;event&quot;</span><br><span class="line">    description: &quot;An example trigger.&quot;</span><br><span class="line">    payload_schema:</span><br><span class="line">      type: &quot;object&quot;</span><br><span class="line">      properties:</span><br><span class="line">        executed_at:</span><br><span class="line">          type: &quot;string&quot;</span><br><span class="line">          format: &quot;date-time&quot;</span><br><span class="line">          default: &quot;2014-07-30 05:04:24.578325&quot;</span><br></pre></td></tr></table></figure>
+
+<p>SampleSensor Python:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">from st2reactor.sensor.base import Sensor</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class SampleSensor(Sensor):</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line">    * self.sensor_service</span><br><span class="line">        - provides utilities like</span><br><span class="line">            - get_logger() - returns logger instance specific to this sensor.</span><br><span class="line">            - dispatch() for dispatching triggers into the system.</span><br><span class="line">    * self._config</span><br><span class="line">        - contains parsed configuration that was specified as</span><br><span class="line">          config.yaml in the pack.</span><br><span class="line">    &quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    def setup(self):</span><br><span class="line">        # Setup stuff goes here. For example, you might establish connections</span><br><span class="line">        # to external system once and reuse it. This is called only once by the system.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def run(self):</span><br><span class="line">        # This is where the crux of the sensor work goes.</span><br><span class="line">        # This is called once by the system.</span><br><span class="line">        # (If you want to sleep for regular intervals and keep</span><br><span class="line">        # interacting with your external system, you&#x27;d inherit from PollingSensor.)</span><br><span class="line">        # For example, let&#x27;s consider a simple flask app. You&#x27;d run the flask app here.</span><br><span class="line">        # You can dispatch triggers using sensor_service like so:</span><br><span class="line">        # self.sensor_service(trigger, payload, trace_tag)</span><br><span class="line">        #   # You can refer to the trigger as dict</span><br><span class="line">        #   # &#123; &quot;name&quot;: $&#123;trigger_name&#125;, &quot;pack&quot;: $&#123;trigger_pack&#125; &#125;</span><br><span class="line">        #   # or just simply by reference as string.</span><br><span class="line">        #   # i.e. dispatch($&#123;trigger_pack&#125;.$&#123;trigger_name&#125;, payload)</span><br><span class="line">        #   # E.g.: dispatch(&#x27;examples.foo_sensor&#x27;, &#123;&#x27;k1&#x27;: &#x27;stuff&#x27;, &#x27;k2&#x27;: &#x27;foo&#x27;&#125;)</span><br><span class="line">        #   # trace_tag is a tag you would like to associate with the dispatched TriggerInstance</span><br><span class="line">        #   # Typically the trace_tag is unique and a reference to an external event.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def cleanup(self):</span><br><span class="line">        # This is called when the st2 system goes down. You can perform cleanup operations like</span><br><span class="line">        # closing the connections to external system here.</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def add_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is created</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def update_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is updated</span><br><span class="line">        pass</span><br><span class="line"></span><br><span class="line">    def remove_trigger(self, trigger):</span><br><span class="line">        # This method is called when trigger is deleted</span><br><span class="line">        pass</span><br></pre></td></tr></table></figure>
+
+<h3 id="Triggers"><a href="#Triggers" class="headerlink" title="Triggers"></a>Triggers</h3><p>用于标识传入StackStorm的事件<br>Internal Triggers：</p>
+<ol>
+<li>st2.generic.actiontrigger</li>
+<li>st2.generic.notifytrigger</li>
+<li>st2.action.file_writen</li>
+<li>st2.generic.inquiry</li>
+</ol>
+<h3 id="Rules"><a href="#Rules" class="headerlink" title="Rules"></a>Rules</h3><p>StackStorm使用Rules和Workflow操作模式捕获为自动化。规则将触发器映射到操作（或工作流），应用匹配条件，并将触发器有效负载映射到Actions输入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">name: &quot;rule_name&quot;                      # required</span><br><span class="line">pack: &quot;examples&quot;                       # optional</span><br><span class="line">description: &quot;Rule description.&quot;       # optional</span><br><span class="line">enabled: true                          # required</span><br><span class="line"></span><br><span class="line">trigger:                               # required</span><br><span class="line">    type: &quot;trigger_type_ref&quot;</span><br><span class="line"></span><br><span class="line">criteria:                              # optional</span><br><span class="line">    trigger.payload_parameter_name1:</span><br><span class="line">        type: &quot;regex&quot;</span><br><span class="line">        pattern : &quot;^value$&quot;</span><br><span class="line">    trigger.payload_parameter_name2:</span><br><span class="line">        type: &quot;iequals&quot;</span><br><span class="line">        pattern : &quot;watchevent&quot;</span><br><span class="line"></span><br><span class="line">action:                                # required</span><br><span class="line">    ref: &quot;action_ref&quot;</span><br><span class="line">    parameters:                        # optional</span><br><span class="line">        foo: &quot;bar&quot;</span><br><span class="line">        baz: &quot;&#123;&#123; trigger.payload_parameter_1 &#125;&#125;&quot;</span><br></pre></td></tr></table></figure>
+<h3 id="Actions"><a href="#Actions" class="headerlink" title="Actions"></a>Actions</h3><p>Action是可以在您的环境中执行任意自动化或修复任务的代码段。它们可以用任何编程语言编写，是最小执行单元。</p>
+<ul>
+<li>local-shell-cmd&#x2F;local-shell-script</li>
+<li>remote-shell-cmd&#x2F;remote-shell-script</li>
+<li>python-script</li>
+<li>http-request</li>
+<li>workflow</li>
+<li>自定义</li>
+</ul>
+<p>Sample Python Action：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">name: &quot;echo_action&quot;</span><br><span class="line">runner_type: &quot;python-script&quot;</span><br><span class="line">description: &quot;Print message to standard output.&quot;</span><br><span class="line">enabled: true</span><br><span class="line">entry_point: &quot;my_echo_action.py&quot;</span><br><span class="line">parameters:</span><br><span class="line">    message:</span><br><span class="line">        type: &quot;string&quot;</span><br><span class="line">        description: &quot;Message to print.&quot;</span><br><span class="line">        required: true</span><br><span class="line">        position: 0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">import sys</span><br><span class="line"></span><br><span class="line">from st2common.runners.base_action import Action</span><br><span class="line"></span><br><span class="line">class MyEchoAction(Action):</span><br><span class="line">    def run(self, message):</span><br><span class="line">        print(message)</span><br><span class="line"></span><br><span class="line">        if message == &#x27;working&#x27;:</span><br><span class="line">            return (True, message)</span><br><span class="line">        return (False, message)</span><br></pre></td></tr></table></figure>
+<h3 id="Workflows"><a href="#Workflows" class="headerlink" title="Workflows"></a>Workflows</h3><p>为了捕获并自动执行这些操作，StackStorm使用了工作流程。工作流将原子动作嵌入到更高级别的自动化中，并通过在正确的时间以正确的输入调用正确的动作来编排其执行。可以理解为扩展版本的Actions</p>
+<ol>
+<li>Orquesta: designed specifically for StackStorm </li>
+<li>ActionChain: one by one</li>
+<li>Mistral: a dedicated workflow service, originated in OpenStack</li>
+</ol>
+<p>Orquesta:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">version: 1.0</span><br><span class="line"></span><br><span class="line">description: A simple workflow.</span><br><span class="line"></span><br><span class="line"># A list of strings, assuming value will be provided at runtime or</span><br><span class="line"># key value pairs where value is the default value when value</span><br><span class="line"># is not provided at runtime.</span><br><span class="line">input:</span><br><span class="line">  - arg1</span><br><span class="line">  - arg2: abc</span><br><span class="line"></span><br><span class="line"># A list of key value pairs.</span><br><span class="line">vars:</span><br><span class="line">  - var1: 123</span><br><span class="line">  - var2: True</span><br><span class="line">  - var3: null</span><br><span class="line"></span><br><span class="line"># A dictionary of task definition. The order of execution is</span><br><span class="line"># determined by inbound task transition and the condition of</span><br><span class="line"># the outbound transition.</span><br><span class="line">tasks:</span><br><span class="line">  task1:</span><br><span class="line">    action: core.noop</span><br><span class="line">    next:</span><br><span class="line">      - do: task2</span><br><span class="line">  task2:</span><br><span class="line">    action: core.noop</span><br><span class="line"></span><br><span class="line"># A list of key value pairs to output.</span><br><span class="line">output:</span><br><span class="line">  - var3: &lt;% ctx().arg1 %&gt;</span><br><span class="line">  - var4:</span><br><span class="line">      var41: 456</span><br><span class="line">      var42: def</span><br><span class="line">  - var5:</span><br><span class="line">      - 1.0</span><br><span class="line">      - 2.0</span><br><span class="line">      - 3.0</span><br></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html">https://docs.stackstorm.com/3.2/orquesta/languages/orquesta.html</a></p>
+<h3 id="Packs"><a href="#Packs" class="headerlink" title="Packs"></a>Packs</h3><p>Packs是扩展StackStorm的集成和自动化的部署单位。Pack里包含了Actions, Workflows, Rules, Sensors。</p>
+<p><img src="/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E/pack.png" alt="pack example"></p>
+<p>Pack如何安装到worker上：</p>
+<ol>
+<li>pull code </li>
+<li>install requirements</li>
+<li>config</li>
+<li>reload</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>赞赏一杯咖啡</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="leason 微信支付">
+        <p>微信支付</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>leason
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://leason.top/StackStorm-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%BC%95%E6%93%8E.html" title="StackStorm(事件驱动的自动化引擎)">https://leason.top/StackStorm-事件驱动的自动化引擎.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4%E8%87%AA%E5%8A%A8%E5%8C%96/" rel="tag"># 运维自动化</a>
+              <a href="/tags/StackStorm/" rel="tag"># StackStorm</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/%E5%88%9D%E8%AF%86Terraform.html" rel="next" title="初识Terraform">
+      初识Terraform <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%92%E8%89%B2"><span class="nav-number">1.1.</span> <span class="nav-text">角色</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sensors"><span class="nav-number">2.</span> <span class="nav-text">Sensors</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Triggers"><span class="nav-number">3.</span> <span class="nav-text">Triggers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rules"><span class="nav-number">4.</span> <span class="nav-text">Rules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Actions"><span class="nav-number">5.</span> <span class="nav-text">Actions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Workflows"><span class="nav-number">6.</span> <span class="nav-text">Workflows</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Packs"><span class="nav-number">7.</span> <span class="nav-text">Packs</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="leason"
+      src="/images/avatar.jpeg">
+  <p class="site-author-name" itemprop="name">leason</p>
+  <div class="site-description" itemprop="description">运维开发，容器相关技术记录分享：Kubernetes、Golang、Terraform、Docker、Linux、Shell、Python、混部、云原生</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leason00" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leason00" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:2395491531@qq.com" title="E-Mail → mailto:2395491531@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/images/wechat.png" title="WeChat → &#x2F;images&#x2F;wechat.png"><i class="fab fa-weixin fa-fw"></i>WeChat</a>
+      </span>
+  </div>
+
+
+
+      </div>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9181950674462941"
+     crossorigin="anonymous"></script>
+<!-- infoad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9181950674462941"
+     data-ad-slot="9565777797"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leason</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '972ae4a1b3613217a544',
+      clientSecret: 'ccebe5ee6207db60d90d5c11a7b43b98cdca188b',
+      repo        : 'leason00.github.io',
+      owner       : 'leason00',
+      admin       : ['leason00'],
+      id          : '863a23ed22c84569c517ccaef5f13ff5',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
